@@ -6,6 +6,14 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		129EFF2B2FE3324200F4DB95 /* MWDATCamera in Frameworks */ = {isa = PBXBuildFile; productRef = 129EFF2A2FE3324200F4DB95 /* MWDATCamera */; };
+		129EFF2D2FE3324200F4DB95 /* MWDATCore in Frameworks */ = {isa = PBXBuildFile; productRef = 129EFF2C2FE3324200F4DB95 /* MWDATCore */; };
+		129EFF2F2FE3324200F4DB95 /* MWDATDisplay in Frameworks */ = {isa = PBXBuildFile; productRef = 129EFF2E2FE3324200F4DB95 /* MWDATDisplay */; };
+		129EFF312FE3324200F4DB95 /* MWDATMockDevice in Frameworks */ = {isa = PBXBuildFile; productRef = 129EFF302FE3324200F4DB95 /* MWDATMockDevice */; };
+		129EFF332FE3324200F4DB95 /* MWDATMockDeviceTestClient in Frameworks */ = {isa = PBXBuildFile; productRef = 129EFF322FE3324200F4DB95 /* MWDATMockDeviceTestClient */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		0ED1B31F9C122949D57D3F08 /* Spectra.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Spectra.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -41,6 +49,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				129EFF2F2FE3324200F4DB95 /* MWDATDisplay in Frameworks */,
+				129EFF2B2FE3324200F4DB95 /* MWDATCamera in Frameworks */,
+				129EFF332FE3324200F4DB95 /* MWDATMockDeviceTestClient in Frameworks */,
+				129EFF312FE3324200F4DB95 /* MWDATMockDevice in Frameworks */,
+				129EFF2D2FE3324200F4DB95 /* MWDATCore in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -85,6 +98,11 @@
 			);
 			name = Spectra;
 			packageProductDependencies = (
+				129EFF2A2FE3324200F4DB95 /* MWDATCamera */,
+				129EFF2C2FE3324200F4DB95 /* MWDATCore */,
+				129EFF2E2FE3324200F4DB95 /* MWDATDisplay */,
+				129EFF302FE3324200F4DB95 /* MWDATMockDevice */,
+				129EFF322FE3324200F4DB95 /* MWDATMockDeviceTestClient */,
 			);
 			productName = iosApp;
 			productReference = 0ED1B31F9C122949D57D3F08 /* Spectra.app */;
@@ -98,7 +116,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1620;
-				LastUpgradeCheck = 1620;
+				LastUpgradeCheck = 2650;
 				TargetAttributes = {
 					3D9D890EB313D14BA4701645 = {
 						CreatedOnToolsVersion = 16.2;
@@ -114,6 +132,9 @@
 			);
 			mainGroup = E021419F1F3244261A5FBEBB;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				129EFF292FE3324200F4DB95 /* XCRemoteSwiftPackageReference "meta-wearables-dat-ios" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 4D88853697156046F989D369 /* Products */;
 			projectDirPath = "";
@@ -170,16 +191,17 @@
 		07B4DCB7E2E1916EDAFD1C7B /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = arm64;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
-				DEVELOPMENT_TEAM = B62NKLG448;
+				DEVELOPMENT_TEAM = 9N8ZC32DMP;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = iosApp/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Spectra;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Needed to connect to your Meta glasses.";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Used to stream from your glasses' camera.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -192,7 +214,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.umain.spectra;
+				PRODUCT_BUNDLE_IDENTIFIER = com.umain.spectrademo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -237,6 +259,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = B62NKLG448;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -260,6 +283,7 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
@@ -268,16 +292,17 @@
 		BE952E94353D163DED28D69F /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = arm64;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
-				DEVELOPMENT_TEAM = B62NKLG448;
+				DEVELOPMENT_TEAM = 9N8ZC32DMP;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = iosApp/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Spectra;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Needed to connect to your Meta glasses.";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Used to stream from your glasses' camera.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -290,7 +315,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.umain.spectra;
+				PRODUCT_BUNDLE_IDENTIFIER = com.umain.spectrademo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -335,6 +360,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = B62NKLG448;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -351,6 +377,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				VALIDATE_PRODUCT = YES;
 			};
@@ -378,6 +405,45 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		129EFF292FE3324200F4DB95 /* XCRemoteSwiftPackageReference "meta-wearables-dat-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/facebook/meta-wearables-dat-ios";
+			requirement = {
+				kind = exactVersion;
+				version = 0.7.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		129EFF2A2FE3324200F4DB95 /* MWDATCamera */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 129EFF292FE3324200F4DB95 /* XCRemoteSwiftPackageReference "meta-wearables-dat-ios" */;
+			productName = MWDATCamera;
+		};
+		129EFF2C2FE3324200F4DB95 /* MWDATCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 129EFF292FE3324200F4DB95 /* XCRemoteSwiftPackageReference "meta-wearables-dat-ios" */;
+			productName = MWDATCore;
+		};
+		129EFF2E2FE3324200F4DB95 /* MWDATDisplay */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 129EFF292FE3324200F4DB95 /* XCRemoteSwiftPackageReference "meta-wearables-dat-ios" */;
+			productName = MWDATDisplay;
+		};
+		129EFF302FE3324200F4DB95 /* MWDATMockDevice */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 129EFF292FE3324200F4DB95 /* XCRemoteSwiftPackageReference "meta-wearables-dat-ios" */;
+			productName = MWDATMockDevice;
+		};
+		129EFF322FE3324200F4DB95 /* MWDATMockDeviceTestClient */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 129EFF292FE3324200F4DB95 /* XCRemoteSwiftPackageReference "meta-wearables-dat-ios" */;
+			productName = MWDATMockDeviceTestClient;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = B88DBBC94D743599FD3F0D43 /* Project object */;
 }

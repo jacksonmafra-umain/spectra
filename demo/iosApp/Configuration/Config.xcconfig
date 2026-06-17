@@ -1,9 +1,12 @@
 TEAM_ID=
 
 PRODUCT_NAME=Spectra
-// Must match the Android package name so a single Wearables Developer Center
-// project covers both platforms. Enter "com.umain.spectra" in both tabs.
-PRODUCT_BUNDLE_IDENTIFIER=com.umain.spectra
+// Under the umain org Apple team (com.umain.*), which supports Associated Domains.
+PRODUCT_BUNDLE_IDENTIFIER=com.umain.spectrademo
 
 CURRENT_PROJECT_VERSION=1
 MARKETING_VERSION=1.0
+
+// Associated Domains (Universal Link for the Meta AI callback). Works on the
+// paid org team. Path is relative to the .xcodeproj folder.
+CODE_SIGN_ENTITLEMENTS=iosApp/iosApp.entitlements

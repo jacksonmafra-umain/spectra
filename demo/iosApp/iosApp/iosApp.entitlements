@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+	  Registration uses a plain custom URL scheme (spectrademo://), so no
+	  Associated Domains entitlement is required — and therefore no paid Apple
+	  Developer team is needed just to register. Matches the official sample.
+	-->
+</dict>
+</plist>

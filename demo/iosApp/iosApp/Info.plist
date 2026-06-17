@@ -20,7 +20,7 @@
 	<key>MWDAT</key>
 	<dict>
 		<key>AppLinkURLScheme</key>
-		<string>spectrademo://</string>
+		<string>spectrademo://spectra</string>
 		<key>ClientToken</key>
 		<string>AR|1001077092842422|6ca268dcc8a07be3ff0f56363f121eb5</string>
 		<key>DAMEnabled</key>
@@ -30,8 +30,11 @@
 		<key>TeamID</key>
 		<string>$(DEVELOPMENT_TEAM)</string>
 	</dict>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Needed to capture audio from your glasses' microphone over Bluetooth.</string>
 	<key>UIBackgroundModes</key>
 	<array>
+		<string>audio</string>
 		<string>bluetooth-peripheral</string>
 		<string>external-accessory</string>
 	</array>
