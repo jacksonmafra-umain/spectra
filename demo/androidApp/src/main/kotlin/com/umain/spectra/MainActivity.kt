@@ -60,6 +60,10 @@ class MainActivity : ComponentActivity(), ActivityBridge {
             permissionLauncher.launch(MetaPermission.CAMERA)
         }
 
+    override fun openGlassesAppUpdate() {
+        try { Wearables.openDATGlassesAppUpdate(this) } catch (_: Throwable) { }
+    }
+
     private fun mapStatus(s: MetaPermissionStatus): PermissionStatus = when (s) {
         is MetaPermissionStatus.Granted -> PermissionStatus.GRANTED
         is MetaPermissionStatus.Denied -> PermissionStatus.DENIED
