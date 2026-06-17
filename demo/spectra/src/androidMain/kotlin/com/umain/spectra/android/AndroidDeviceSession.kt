@@ -21,7 +21,7 @@ import java.nio.ByteBuffer
 
 import com.meta.wearable.dat.core.session.DeviceSession as MetaSession
 import com.meta.wearable.dat.core.session.DeviceSessionState
-import com.meta.wearable.dat.core.session.addStream
+import com.meta.wearable.dat.camera.addStream
 import com.meta.wearable.dat.camera.Stream as MetaStream
 import com.meta.wearable.dat.camera.types.PhotoData
 import com.meta.wearable.dat.camera.types.StreamConfiguration as MetaStreamConfiguration

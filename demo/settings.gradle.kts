@@ -1,4 +1,6 @@
-rootProject.name = "Spectra"
+// Root project name must differ from the ":spectra" module, or the type-safe
+// project accessors generate two getSpectra() methods and fail to compile.
+rootProject.name = "SpectraDemo"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 pluginManagement {
