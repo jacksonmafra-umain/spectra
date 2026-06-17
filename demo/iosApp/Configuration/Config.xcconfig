@@ -1,8 +1,8 @@
 TEAM_ID=
 
 PRODUCT_NAME=Spectra
-# Must match the Android package name so a single Wearables Developer Center
-# project covers both platforms. Enter "com.umain.spectra" in both tabs.
+// Must match the Android package name so a single Wearables Developer Center
+// project covers both platforms. Enter "com.umain.spectra" in both tabs.
 PRODUCT_BUNDLE_IDENTIFIER=com.umain.spectra
 
 CURRENT_PROJECT_VERSION=1

@@ -13,12 +13,16 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
@@ -30,15 +34,30 @@ import androidx.compose.ui.unit.dp
  *
  * It walks the canonical integration sequence top to bottom: initialize,
  * register, permit, session, stream, capture, display. Every button maps to one
- * Spectra call, so the UI doubles as a clickable version of the README. Runs on
- * the [Spectra.mock] client, so it works on Android and iOS with nothing plugged
- * in. This is the shared entry point both `androidApp` and `iosApp` render.
+ * Spectra call, so the UI doubles as a clickable version of the README.
+ *
+ * The "Backend" toggle picks the client at runtime: [Spectra.mock] (synthetic
+ * frames, no hardware) or the real glasses backend passed in by the platform
+ * entry point. On iOS the real option is disabled until the Swift bridge exists,
+ * so [realClient] is null there and the mock is used.
+ *
+ * @param realClient the platform's hardware-backed client, or null if this
+ *   platform can't reach the glasses yet. Android passes one in from
+ *   `MainActivity`; iOS passes null for now.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun App(client: SpectraClient = Spectra.mock()) {
+fun App(realClient: SpectraClient? = null) {
     val scope = rememberCoroutineScope()
-    val state = remember { PlaygroundState(scope, client) }
+    val mock = remember { Spectra.mock() }
+
+    // Default to the mock so nobody accidentally pokes Bluetooth on first launch.
+    var useMock by remember { mutableStateOf(true) }
+
+    // Switching backend swaps the client; remember(client) rebuilds the state
+    // holder so the new client starts from a clean slate.
+    val client = if (!useMock && realClient != null) realClient else mock
+    val state = remember(client) { PlaygroundState(scope, client) }
 
     MaterialTheme(colorScheme = darkColorScheme()) {
         Box(modifier = Modifier.fillMaxSize().safeContentPadding().padding(16.dp)) {
@@ -52,9 +71,37 @@ fun App(client: SpectraClient = Spectra.mock()) {
                     fontWeight = FontWeight.Bold,
                 )
                 Text(
-                    "Meta's wearable SDK, wrapped in Kotlin Multiplatform and faked end to end. No glasses were harmed.",
+                    "Meta's wearable SDK, wrapped in Kotlin Multiplatform. Pick a backend, then walk the buttons.",
                     style = MaterialTheme.typography.bodySmall,
                 )
+
+                // --- Backend selector (Mock vs real glasses) ---------------------
+                Text("Backend", style = MaterialTheme.typography.titleSmall)
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FilterChip(
+                        selected = useMock,
+                        onClick = { useMock = true },
+                        label = { Text("Mock") },
+                    )
+                    FilterChip(
+                        selected = !useMock,
+                        enabled = realClient != null,
+                        onClick = { useMock = false },
+                        label = { Text("Glasses (real)") },
+                    )
+                }
+                if (realClient == null) {
+                    Text(
+                        "Real backend isn't wired on this platform yet — running on the mock.",
+                        style = MaterialTheme.typography.labelSmall,
+                    )
+                } else {
+                    Text(
+                        if (useMock) "Synthetic frames. No hardware touched."
+                        else "Live: talks to the Meta AI app and your glasses.",
+                        style = MaterialTheme.typography.labelSmall,
+                    )
+                }
 
                 LogCard(state.log)
 

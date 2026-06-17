@@ -1,0 +1,12 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["9N8ZC32DMP.com.umain.spectra"],
+        "components": [
+          { "/": "/spectra/*", "comment": "Meta AI callback for the Spectra demo" }
+        ]
+      }
+    ]
+  }
+}
