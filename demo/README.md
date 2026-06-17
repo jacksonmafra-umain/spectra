@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="../docs/logo.png" alt="Spectra" width="300">
+</p>
+
 # Spectra Playground (Android + iOS demo)
 
 A runnable Compose Multiplatform demo of **Spectra** — the Kotlin Multiplatform

@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="logo.png" alt="Spectra" width="300">
+</p>
+
 # Spectra Docs
 
 The Spectra documentation site. It is intentionally boring to host: static files, no build step, no framework, no `node_modules`. Just HTML and two plain-text files for the robots.

@@ -1,8 +1,12 @@
+<p align="center">
+  <img src="docs/logo.png" alt="Spectra" width="320">
+</p>
+
 # Spectra
 
 **Meta's glasses SDK, minus the boilerplate and most of the suffering.**
 
-Spectra is a Kotlin Multiplatform wrapper around [Meta's Wearables Device Access Toolkit](https://wearables.developer.meta.com/docs/develop/dat/) (DAT). It collapses the native SDK — callbacks, result builders, activity-result contracts — into one coroutine-and-`Flow` API you call from `commonMain`. Registration, permissions, device sessions, camera streaming and photo capture, all behind a single `SpectraClient`.
+Spectra is a Kotlin Multiplatform wrapper around [Meta's Wearables Device Access Toolkit](https://wearables.developer.meta.com/docs/develop/dat/) (DAT). It collapses the native SDK — callbacks, result builders, activity-result contracts — into one coroutine-and-`Flow` API you call from `commonMain`. Registration, permissions, device sessions, camera streaming and photo capture, the Ray-Ban Display, and Bluetooth audio (A2DP playback + HFP mic), all behind a single `SpectraClient`.
 
 > Independent wrapper. Not affiliated with, sponsored by, or endorsed by Meta. The toolkit is a developer preview, so the API will move.
 
@@ -15,18 +19,18 @@ demo/
                 androidMain (real mwdat backend), iOS targets.
   shared/       Playground UI (Compose). Depends on :spectra — like any app would.
   androidApp/   Android entry point.
-  iosApp/       iOS Xcode project (mock for now; Swift bridge pending).
+  iosApp/       iOS Xcode project — real Swift bridge (SpectraBridge.swift) wired to Wearables.shared.
 docs/           Spectra Docs — a static, Vercel-ready site (index.html + llms.txt + AGENTS.md).
 ```
 
-The library (`:spectra`) is standalone: it has no dependency on the demo, so any project can use it. The demo is just the first consumer. It has a runtime **Backend** toggle — **Mock** (synthetic frames, no hardware) or **Glasses (real)** (talks to the Meta AI app and your glasses); Android ships the real backend wired, iOS runs on the mock until the Swift bridge is added.
+The library (`:spectra`) is standalone: it has no dependency on the demo, so any project can use it. The demo is just the first consumer. Both platforms now run the **real** backend (Android via `mwdat`, iOS via the Swift bridge) as well as the in-memory **Mock**, switchable from the demo's debug sheet. A developer-only **MockDeviceKit** simulates a Ray-Ban Meta so the whole register → session → stream pipeline runs with no hardware in the room.
 
 ## Use Spectra in your own project
 
 Publish the library to Maven Local, then depend on it from any KMP project — no demo required:
 
 ```bash
-cd demo && ./gradlew :spectra:publishToMavenLocal   # -> com.umain.spectra:spectra:0.1.0
+cd demo && ./gradlew :spectra:publishToMavenLocal   # -> com.umain.spectra:spectra:0.2.0
 ```
 
 ```kotlin
@@ -44,7 +48,10 @@ dependencyResolutionManagement {
 }
 
 // shared/build.gradle.kts of your project
-kotlin { sourceSets { commonMain.dependencies { implementation("com.umain.spectra:spectra:0.1.0") } } }
+kotlin { sourceSets { commonMain.dependencies { implementation("com.umain.spectra:spectra:0.2.0") } } }
+// SpectraClient now also exposes `hasActiveDevice: Flow<Boolean>`, an optional
+// `mockDeviceKit: MockDeviceKit?` for hardware-free testing, and an optional
+// `audio: SpectraAudio?` (A2DP playback + HFP mic — plain Bluetooth, not DAT).
 ```
 
 Then `Spectra.mock()` works anywhere; `Spectra.create(context, bridge)` gives the real Android client (needs the GitHub token + the manifest credentials).
@@ -64,7 +71,7 @@ The mock needs no token. To use **Glasses (real)** on Android, put a GitHub Pack
 
 **iOS**
 
-Open `demo/iosApp/Spectra.xcodeproj` in Xcode, pick a simulator (Apple Silicon), and Run. The `Shared` framework is built automatically by a Gradle build phase.
+Open `demo/iosApp/Spectra.xcodeproj` in Xcode and Run — on a simulator (Apple Silicon) for the mock, or on a real device for actual glasses. The `Shared` framework is built automatically by a Gradle build phase. With no glasses around, tap the floating debug (ladybug) button → **Enable MockDeviceKit** → **Pair Ray-Ban Meta** to light up streaming.
 
 ## Use it on real glasses
 

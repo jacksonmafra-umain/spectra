@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Spectra — Kotlin Multiplatform wrapper for Meta's Wearables Device Access Toolkit</title>
 <meta name="description" content="Spectra is a Kotlin Multiplatform wrapper around Meta's Wearables Device Access Toolkit. One coroutine-and-Flow API for registration, camera streaming, photo capture and the Ray-Ban Display, on Android and iOS." />
+<link rel="icon" type="image/png" href="/favicon.png" />
+<link rel="icon" href="/favicon.ico" sizes="any" />
+<link rel="apple-touch-icon" href="/favicon.png" />
 <link rel="preconnect" href="https://cdnjs.cloudflare.com" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css" />
 <style>
@@ -73,9 +76,9 @@
     <nav>
       <a href="#install">Install</a>
       <a href="#quickstart">Quickstart</a>
+      <a href="#demo">Run the demo</a>
       <a href="#camera">Camera</a>
-      <a href="#display">Display</a>
-      <a href="#agents">For agents</a>
+      <a href="#golive">Go live</a>
       <a href="/llms.txt">llms.txt</a>
     </nav>
   </div>
@@ -83,7 +86,8 @@
 
 <div class="wrap">
   <section class="hero">
-    <span class="pill">Kotlin Multiplatform · developer preview · v0.1.0</span>
+    <img src="logo.png" alt="Spectra" style="height:96px;width:auto;margin-bottom:22px;display:block" />
+    <span class="pill">Kotlin Multiplatform · developer preview · v0.2.0</span>
     <h1>Meta's glasses SDK,<br/><span class="grad">minus the boilerplate</span> and most of the suffering.</h1>
     <p class="lede">Spectra is a Kotlin Multiplatform wrapper around Meta's Wearables Device Access Toolkit. Registration, permissions, camera streaming, photo capture and the Ray-Ban Display — one coroutine-and-<code>Flow</code> API in <code>commonMain</code>, the platform plumbing hidden where it belongs.</p>
     <div class="cta">
@@ -92,7 +96,7 @@
     </div>
     <div class="trio">
       <div class="card"><span>Library</span><h3>Spectra</h3><p>The wrapper. Add it, call it, ship.</p></div>
-      <div class="card"><span>Demo</span><h3>Spectra Playground</h3><p>Compose Multiplatform app running the whole flow on a mock device.</p></div>
+      <div class="card"><span>Demo</span><h3>Spectra Playground</h3><p>Compose Multiplatform app — runs on real glasses or a simulated MockDeviceKit, Android &amp; iOS.</p></div>
       <div class="card"><span>Docs</span><h3>Spectra Docs</h3><p>This page, plus an <a href="/llms.txt">llms.txt</a> and <a href="/AGENTS.md">AGENTS.md</a> for the robots.</p></div>
     </div>
   </section>
@@ -105,12 +109,15 @@
     <a href="#install">Install</a>
     <a href="#quickstart">Quickstart</a>
     <a href="#local">Build, test & publish</a>
+    <a href="#demo">Run the demo</a>
     <a href="#mock">Test with the mock</a>
+    <a href="#mockkit">MockDeviceKit & devices</a>
     <h4>Concepts</h4>
     <a href="#lifecycle">Session lifecycle</a>
     <a href="#permissions">Registration & permissions</a>
     <a href="#camera">Camera & photos</a>
     <a href="#display">The display</a>
+    <a href="#audio">Audio (mic & speakers)</a>
     <h4>Platforms</h4>
     <a href="#android">Android</a>
     <a href="#ios">iOS</a>
@@ -133,7 +140,7 @@
         <tr><td><code>Result&lt;T&gt;</code> with a typed <code>SpectraError</code></td><td>Errors that politely decline to explain themselves</td></tr>
         <tr><td><code>Spectra.mock()</code></td><td>No glasses, no token, no Bluetooth seance, full test coverage</td></tr>
       </table>
-      <div class="note"><b>Status:</b> the toolkit is a developer preview and so is Spectra (v0.1.0). The API will move. Pin your version and read the changelog before you upgrade.</div>
+      <div class="note"><b>Status:</b> the toolkit is a developer preview and so is Spectra (v0.2.0). The API will move. Pin your version and read the changelog before you upgrade. <b>New in 0.2.0:</b> <code>hasActiveDevice</code> on <code>SpectraClient</code>, and a developer-only <code>MockDeviceKit</code> for running the full pipeline with no hardware.</div>
     </section>
 
     <section id="install">
@@ -158,7 +165,7 @@ dependencyResolutionManagement {
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation("com.umain.spectra:spectra:0.1.0")
+            implementation("com.umain.spectra:spectra:0.2.0")
         }
     }
 }</code></pre>
@@ -167,7 +174,7 @@ kotlin {
 
     <section id="local">
       <h2>Build, test &amp; publish locally</h2>
-      <p>Use the Gradle <b>wrapper</b>. The project is pinned to Gradle 8.10.2 — the version AGP 8.5.2 / Kotlin 2.1.0 / Compose 1.7.1 expect. Gradle 9.x will not build it (it removed an internal API that Kotlin Multiplatform still calls). If the wrapper is missing, bootstrap it once with any Gradle 8.x on your PATH: <code>gradle wrapper --gradle-version 8.10.2</code>.</p>
+      <p>Use the Gradle <b>wrapper</b>. The project runs on the current toolchain — Gradle 9.1, AGP 9, Kotlin 2.4, Compose Multiplatform 1.11 (the AGP 9 KMP plugin, <code>com.android.kotlin.multiplatform.library</code>, with an <code>androidLibrary {}</code> block). If the wrapper is missing, bootstrap it once with any Gradle 9.x on your PATH: <code>gradle wrapper --gradle-version 9.1</code>.</p>
 
       <h3>Run the tests</h3>
       <p>The mock-driven test suite needs no glasses and no token. It's the fastest way to confirm everything works.</p>
@@ -181,7 +188,7 @@ kotlin {
       <div class="note">The <b>real Android backend</b> resolves the <code>mwdat-*</code> artifacts from GitHub Packages, which needs a token with <code>read:packages</code>. Put <code>github_token=ghp_...</code> in <code>local.properties</code> (gitignored) or export it — <code>settings.gradle.kts</code> reads the <code>GH_TOKEN</code> environment variable. The mock and <code>:spectra:allTests</code> build without it.</div>
 
       <h3>Publish to Maven Local</h3>
-      <p>Consume Spectra from another project on your machine, no remote repository required. This publishes the multiplatform metadata plus the Android and iOS variants to <code>~/.m2/repository</code> under <code>com.umain.spectra:spectra:0.1.0</code>.</p>
+      <p>Consume Spectra from another project on your machine, no remote repository required. This publishes the multiplatform metadata plus the Android and iOS variants to <code>~/.m2/repository</code> under <code>com.umain.spectra:spectra:0.2.0</code>.</p>
       <pre><code class="language-bash">./gradlew :spectra:publishToMavenLocal
 ls ~/.m2/repository/com/umain/spectra      # verify it landed</code></pre>
       <p>Then point the consuming project at Maven Local and depend on it:</p>
@@ -198,7 +205,7 @@ dependencyResolutionManagement {
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation("com.umain.spectra:spectra:0.1.0")
+            implementation("com.umain.spectra:spectra:0.2.0")
         }
     }
 }</code></pre>
@@ -217,10 +224,12 @@ suspend fun run() {
 
     spectra.initialize()
     spectra.startRegistration()           // deeplinks to the Meta AI app on device
-    spectra.requestPermission(Permission.CAMERA)
 
-    // A device only appears AFTER registration + a granted permission.
-    val device = spectra.devices.first { it.isNotEmpty() }.first()
+    // Wait for the platform's auto-selector to report an active pair of glasses.
+    // This is the honest "is there a device?" signal — see "MockDeviceKit & devices".
+    spectra.hasActiveDevice.first { it }
+
+    spectra.requestPermission(Permission.CAMERA)   // gates the stream's contents
 
     val session = spectra.createSession(DeviceSelector.Auto).getOrThrow()
     session.start()
@@ -237,18 +246,50 @@ suspend fun run() {
 
     val photo = stream.capturePhoto().getOrThrow()
 }</code></pre>
-      <div class="note"><b>The one gotcha worth tattooing:</b> a device will not show up in <code>devices</code> until the user has both registered <em>and</em> granted at least one permission. An empty device list after registration almost always means you forgot the permission.</div>
+      <div class="note"><b>The one gotcha worth tattooing:</b> don't gate streaming on <code>devices</code> being non-empty — on a real connection that list can stay empty even with glasses on your face. Wait on <code>hasActiveDevice</code> instead (it's fed by the SDK's auto-selector). Full story in <a href="#mockkit">MockDeviceKit &amp; devices</a>.</div>
+    </section>
+
+    <section id="demo">
+      <h2>Run the demo (Android &amp; iOS)</h2>
+      <p>The Spectra Playground is one shared Compose Multiplatform screen — the same code on both platforms — restyled after Meta's own CameraAccess sample. It walks the exact flow your app would, and it runs with or without real glasses.</p>
+      <ol>
+        <li><b>Build it.</b> Android: <code>cd demo &amp;&amp; ./gradlew :androidApp:installDebug</code>. iOS: open <code>demo/iosApp/Spectra.xcodeproj</code> and Run (simulator for the mock, a real device for actual glasses).</li>
+        <li><b>Connect.</b> The white welcome screen has a single blue <b>Connect my glasses</b> button — it kicks off registration (deeplinking to the Meta AI app on a real device).</li>
+        <li><b>Stream.</b> Once registered you land on the black <b>Stream Your Glasses Camera</b> screen. When a device is active the blue <b>Start streaming</b> button enables; tap it to grant camera, open a session, and start the camera stream in one go. The circular button takes a still mid-stream.</li>
+        <li><b>Disconnect.</b> The gear (top-right) reveals a <b>Disconnect</b> button — that's <code>startUnregistration()</code>.</li>
+        <li><b>No glasses? Fake one.</b> The floating <b>ladybug</b> button (bottom-right) opens a debug sheet with the <b>Mock Device Kit</b>: <b>Enable MockDeviceKit</b> → <b>Pair Ray-Ban Meta</b>, and a device goes active immediately. The same sheet has the <b>Backend</b> toggle (Mock vs. real glasses).</li>
+      </ol>
+      <div class="note">On the simulator the demo defaults to the in-memory <code>Spectra.mock()</code>; on a real device it uses the platform backend. Either way the MockDeviceKit lets you reach the streaming screen without hardware.</div>
     </section>
 
     <section id="mock">
       <h2>Test with the mock</h2>
-      <p><code>Spectra.mock()</code> is a complete in-memory simulation. It enforces the same preconditions as the real SDK — initialize before use, register before sessions, permit before a device appears — so passing against the mock means you actually learned the steps. Drive the failure paths on purpose:</p>
+      <p><code>Spectra.mock()</code> is a complete in-memory simulation. It enforces the same preconditions as the real SDK — initialize before use, register before sessions — so passing against the mock means you actually learned the steps. Drive the failure paths on purpose:</p>
       <pre><code class="language-kotlin">// Rehearse "user said no" without misconfiguring anything.
 val denied = Spectra.mock(MockConfig(autoGrantPermissions = false))
 
 // Rehearse a failed registration and your error UI.
 val broken = Spectra.mock(MockConfig(failRegistration = true))</code></pre>
-      <p>It runs on the JVM, in CI, and inside a Compose or SwiftUI preview. The <a href="https://github.com/">Spectra Playground</a> demo is built entirely on it.</p>
+      <p>It runs on the JVM, in CI, and inside a Compose or SwiftUI preview. The Spectra Playground demo runs on it by default, and on the real backends when you flip the switch.</p>
+    </section>
+
+    <section id="mockkit">
+      <h2>MockDeviceKit &amp; the empty-<code>devices</code> trap</h2>
+      <p>Hard-won lesson, now baked into the API. With real glasses connected and registered, <code>Wearables.devices</code> (the raw device list) <b>can still be empty</b> — so code that waits for <code>devices.isNotEmpty()</code> hangs forever, even though everything is fine. Meta's own CameraAccess sample sidesteps this: it never reads that list. It listens to the auto-selector's <em>active device</em> stream instead.</p>
+      <p>Spectra does the same. The iOS backend folds <code>AutoDeviceSelector.activeDeviceStream()</code> into <code>devices</code>, and every client exposes the honest signal directly:</p>
+      <pre><code class="language-kotlin">// Wait for a usable device the reliable way.
+spectra.hasActiveDevice.first { it }      // Flow&lt;Boolean&gt;, fed by the auto-selector
+val session = spectra.createSession(DeviceSelector.Auto).getOrThrow()</code></pre>
+      <p>Camera <em>permission</em> gates the stream's <b>contents</b>, not the device's existence — which is why <code>hasActiveDevice</code> can be true before you've granted anything.</p>
+
+      <h3>Running with no hardware: MockDeviceKit</h3>
+      <p>To exercise the whole register → session → stream pipeline without real glasses, use the developer-only <code>MockDeviceKit</code>. It's null on backends that can't fake a device (a real Android build); the mock client and the real iOS backend (via Meta's <code>MockDeviceKit.shared</code>) both provide one.</p>
+      <pre><code class="language-kotlin">spectra.mockDeviceKit?.let { kit ->
+    kit.enable()        // turn the simulator on
+    kit.pairGlasses()   // pair (and power on) a simulated Ray-Ban Meta -> hasActiveDevice flips true
+    kit.state.collect { s -> /* s.enabled, s.pairedCount */ }
+}</code></pre>
+      <div class="note">In the demo this is the <b>ladybug</b> debug button → <b>Enable MockDeviceKit</b> → <b>Pair Ray-Ban Meta</b>. It's the fastest way to reach the streaming screen on a simulator or a phone with no glasses nearby.</div>
     </section>
 
     <section id="lifecycle">
@@ -287,7 +328,7 @@ when (spectra.checkPermission(Permission.CAMERA)) {
     PermissionStatus.GRANTED -> startStreaming()
     else -> spectra.requestPermission(Permission.CAMERA)
 }</code></pre>
-      <div class="note">Microphone input on real hardware goes through the platform's Hands-Free Profile (HFP) over Bluetooth, not the Meta AI permission flow — so you still request the mic with the normal OS dialog. Spectra models <code>Permission.MICROPHONE</code> for completeness.</div>
+      <div class="note">Microphone input on real hardware goes through the platform's Hands-Free Profile (HFP) over Bluetooth, not the Meta AI permission flow — so you still request the mic with the normal OS dialog. See <a href="#audio">Audio</a> for the full story and <code>SpectraClient.audio</code>.</div>
     </section>
 
     <section id="camera">
@@ -323,6 +364,24 @@ display.sendContent {
       <div class="note"><b>Always have a root view (L0).</b> The back gesture from the root ends the whole session, so always leave the user a way home. Keep layouts simple, images at or below 600&times;600, and videos short (MP4, https, 400px per side max).</div>
     </section>
 
+    <section id="audio">
+      <h2>Audio: microphones &amp; speakers</h2>
+      <p>Audio is <b>not</b> part of the Device Access Toolkit. On real hardware the Ray-Ban speakers and microphone are plain Bluetooth, shared with the system audio stack, so Spectra wraps the <em>platform</em> audio session — not the SDK — behind its own <code>SpectraClient.audio</code> capability (null where a backend can't route audio).</p>
+      <table>
+        <tr><th>Profile</th><th>Direction</th><th>Quality</th><th>Use</th></tr>
+        <tr><td><b>A2DP</b></td><td>Output only</td><td>44.1/48 kHz stereo</td><td>Music, media, text-to-speech</td></tr>
+        <tr><td><b>HFP</b></td><td>Bidirectional</td><td>8 kHz mono</td><td>Capturing the wearer's voice</td></tr>
+      </table>
+      <pre><code class="language-kotlin">val audio = spectra.audio ?: return   // null when the backend can't route audio
+
+audio.state.onEach { /* it.profile, it.micLevel, it.isPlaying, it.routedToGlasses */ }.launchIn(scope)
+
+audio.playToGlasses("Hello from your glasses")   // A2DP, high quality
+audio.startMicCapture()                           // HFP, emits a live level
+audio.stopMicCapture()</code></pre>
+      <div class="note"><b>Two gotchas baked into the API.</b> The profiles are mutually exclusive — turning the mic on (HFP) knocks playback down to 8 kHz mono. And if you ever capture the mic <em>while</em> a camera stream runs, the order matters: add the camera stream, start &amp; settle the HFP mic, <em>then</em> start the stream — or the audio route fails silently. The demo keeps audio on the pre-streaming screen to sidestep that. Under the hood it's <code>AVAudioSession</code>/<code>AVAudioEngine</code> on iOS and <code>AudioManager</code>/<code>AudioRecord</code> on Android; the mic needs the usual microphone permission.</div>
+    </section>
+
     <section id="android">
       <h2>Android</h2>
       <p>Get the real client from <code>Spectra.create(context, bridge)</code>. Registration and the camera permission both deeplink to the Meta AI app and return via an <code>ActivityResult</code> contract that Android insists you register before the host is resumed — so those three calls live in an <code>ActivityBridge</code> you implement against a real Activity. Spectra handles everything else.</p>
@@ -340,7 +399,8 @@ display.sendContent {
 
     <section id="ios">
       <h2>iOS</h2>
-      <p>Get the client from <code>Spectra.create()</code>. Honest caveat: Meta's iOS toolkit is a <em>Swift</em> package, and Kotlin/Native speaks Objective-C interop, not Swift. So a production iOS build needs a thin <code>@objc</code> Swift shim that re-exposes the calls you use, wired in via <code>cinterop</code>. Spectra ships that bridge scaffolded and fully documented — the mapping mirrors Android one-to-one. Until you write the shim, <code>Spectra.mock()</code> runs fine on iOS, including in SwiftUI previews.</p>
+      <p>Get the client from <code>Spectra.create(bridge)</code>. Meta's iOS toolkit is a <em>Swift</em> package and Kotlin/Native speaks Objective-C interop, not Swift — so Spectra crosses the gap with a small protocol, <code>SpectraNativeBridge</code>, that Swift implements against <code>Wearables.shared</code>. The demo ships a complete implementation (<code>SpectraBridge.swift</code>): registration, the camera-permission flow, the active-device stream, camera streaming, photo capture, and MockDeviceKit. It's wired and works on real Ray-Ban Meta glasses today; <code>Spectra.mock()</code> still runs on the simulator and in SwiftUI previews.</p>
+      <div class="note"><b>Registration on iOS uses a custom URL scheme</b> — like Meta's own sample, and the simplest path. Set <code>MWDAT.AppLinkURLScheme</code> to <code>yourscheme://</code> and register that scheme in <code>CFBundleURLTypes</code>; the Meta AI app calls back there and your app forwards the URL to <code>Wearables.shared.handleUrl(...)</code> from <code>.onOpenURL</code> (filter on the <code>metaWearablesAction</code> query item). No Universal Link, no <code>apple-app-site-association</code>, no Associated Domains entitlement, and no paid Apple team required just to register. (A Universal Link is only worth the extra setup if you specifically need <code>https</code> links.)</div>
     </section>
 
     <section id="golive">
@@ -404,11 +464,11 @@ display.sendContent {
       <p>Reference: <a href="https://wearables.developer.meta.com/docs/develop/dat/getting-started-toolkit/">Getting started / setup</a> and <a href="https://wearables.developer.meta.com/docs/develop/dat/display-overview/">Display overview</a>.</p>
 
       <h3>Step 7 — The tester's side, in the Meta AI app</h3>
-      <p>Once invited, a tester picks the right <b>Release Channel</b> (device menu → Settings → Release Channel) and manages what your app may touch under <b>Settings → Connected Apps</b> → your app → camera set to Always allow / Always ask / Don't allow. Remember the rule from the lifecycle docs: a device won't even appear to your code until the user has granted at least one permission here.</p>
+      <p>Once invited, a tester picks the right <b>Release Channel</b> (device menu → Settings → Release Channel) and manages what your app may touch under <b>Settings → Connected Apps</b> → your app → camera set to Always allow / Always ask / Don't allow. The device shows up via the auto-selector once it's connected and registered (see <a href="#mockkit">MockDeviceKit &amp; devices</a>); the camera permission then governs whether the <em>stream</em> may run.</p>
 
       <h3>Step 8 — Swap the mock for the real backend</h3>
-      <p>With all of the above in place, replace <code>Spectra.mock()</code> with the real client: on Android, wire the delegation from <code>spectra/android-reference/</code>, re-add the <code>mwdat-*</code> dependencies, and supply your GitHub Packages token; on iOS, finish the <code>@objc</code> Swift shim and connect it via <code>cinterop</code>. The flow your code calls — initialize, register, permit, session, stream, display — does not change one line. That was the whole point.</p>
-      <div class="note"><b>When it won't connect</b>, it's almost always one of: wrong <code>APPLICATION_ID</code>/<code>CLIENT_TOKEN</code>, a tester not on the channel, a permission not granted in the Meta AI app, or glasses that wandered off (folded hinges drop Bluetooth and stop the session). Check those four before blaming the SDK. Then check them again.</div>
+      <p>Both real backends are already wired in the demo. On <b>Android</b>, <code>Spectra.create(context, bridge)</code> delegates to <code>mwdat</code> — you just supply the GitHub Packages token and the manifest credentials. On <b>iOS</b>, <code>Spectra.create(bridge)</code> uses the shipped <code>SpectraBridge.swift</code> against <code>Wearables.shared</code> — set your Meta App ID / Client Token / Team ID in <code>Info.plist</code> and a custom URL scheme for the registration callback. The flow your code calls — initialize, register, wait for an active device, permit, session, stream, display — does not change one line between mock and hardware. That was the whole point.</p>
+      <div class="note"><b>When it won't connect</b>, it's almost always one of: wrong <code>APPLICATION_ID</code>/<code>CLIENT_TOKEN</code>, a tester not on the channel, a permission not granted in the Meta AI app, or glasses that wandered off (folded hinges drop Bluetooth, and the active-device stream goes <code>nil</code> — the session stops with it). Check those four before blaming the SDK. Then check them again.</div>
     </section>
 
     <section id="agents">
@@ -465,7 +525,7 @@ display.sendContent {
 
 <footer>
   <div class="wrap">
-    <div>Spectra v0.1.0 · MIT · an independent wrapper, not affiliated with or endorsed by Meta.</div>
+    <div>Spectra v0.2.0 · MIT · an independent wrapper, not affiliated with or endorsed by Meta.</div>
     <div><a href="/llms.txt">llms.txt</a> · <a href="/AGENTS.md">AGENTS.md</a> · <a href="https://wearables.developer.meta.com/docs/develop/dat/">Meta DAT docs</a></div>
   </div>
 </footer>

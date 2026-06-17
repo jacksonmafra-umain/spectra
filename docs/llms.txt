@@ -1,27 +1,28 @@
 # Spectra
 
-> Spectra is a Kotlin Multiplatform wrapper around Meta's Wearables Device Access Toolkit (DAT). It exposes one coroutine-and-Flow API in commonMain for app registration, permissions, device sessions, camera streaming, photo capture, and the Ray-Ban Display, with an Android backend that delegates to the real mwdat-* artifacts, a documented iOS Swift-bridge skeleton, and a fully in-memory mock client for tests and previews. Library version 0.1.0. Targets Android (minSdk 29) and iOS (15.2+).
+> Spectra is a Kotlin Multiplatform wrapper around Meta's Wearables Device Access Toolkit (DAT). It exposes one coroutine-and-Flow API in commonMain for app registration, permissions, device sessions, camera streaming, photo capture, the Ray-Ban Display, and Bluetooth audio (A2DP playback / HFP mic), with an Android backend that delegates to the real mwdat-* artifacts, a complete iOS Swift bridge (SpectraBridge.swift, against Wearables.shared), and a fully in-memory mock client for tests and previews. A developer-only MockDeviceKit simulates a Ray-Ban Meta with no hardware. Library version 0.2.0. Targets Android (minSdk 29) and iOS (15.2+).
 
 ## Core call sequence (do this in order)
 
 1. `spectra.initialize()` — once per process, before anything else.
-2. `spectra.startRegistration()` — one-time link to the Meta AI app.
-3. `spectra.requestPermission(Permission.CAMERA)` — required before any device appears.
-4. Read `spectra.devices` (a Flow) until it is non-empty.
+2. `spectra.startRegistration()` — one-time link to the Meta AI app (returns via a custom URL scheme on iOS, e.g. `spectrademo://`; no Universal Link needed).
+3. Wait on `spectra.hasActiveDevice` (a `Flow<Boolean>`) until true — this is the reliable "device ready" signal, fed by the SDK's auto-selector.
+4. `spectra.requestPermission(Permission.CAMERA)` — gates the stream's contents (not the device's existence).
 5. `spectra.createSession(DeviceSelector.Auto)`, then `session.start()`, then wait for `SessionState.RUNNING`.
 6. `session.openCameraStream(StreamConfiguration(...))` and/or `session.attachDisplay()`.
 
 ## Key facts and gotchas
 
-- A device does NOT appear in `devices` until the user is registered AND has granted at least one permission. Empty list after registration usually means the permission step was skipped.
+- Do NOT gate on `spectra.devices` being non-empty: with real glasses connected, the raw device list can stay empty. Wait on `spectra.hasActiveDevice` instead (the iOS backend folds `AutoDeviceSelector.activeDeviceStream()` into `devices`). When glasses fold/sleep the active device goes back to nil and the session stops.
+- Run the whole pipeline with no hardware via `spectra.mockDeviceKit` (null on backends that can't fake one): `enable()` then `pairGlasses()` makes a simulated device active. In the demo it's the ladybug debug button → Enable MockDeviceKit → Pair Ray-Ban Meta.
 - Session state is device-driven and asynchronous. Observe it; never assume the cause of a transition. `PAUSED` means hold and wait — do not restart.
 - Camera resolution and frame rate are requests, not guarantees; Bluetooth runs an automatic quality ladder (drops resolution first, then frame rate, never below 15fps). Valid frame rates: 2, 7, 15, 24, 30.
 - You cannot reconfigure a stream within a session. Stop the session and start a new one.
 - Display: every `sendContent` replaces the whole screen; no partial updates; the glasses retain no state. Always keep a root (L0) view because the back gesture from root ends the session.
-- Microphone uses platform HFP, not the Meta AI permission flow.
+- Audio is NOT a DAT API — the glasses' speakers/mic are plain Bluetooth (A2DP output hi-fi, HFP mic 8 kHz mono), shared with the system audio stack. Spectra wraps the platform audio session behind `SpectraClient.audio: SpectraAudio?` (null if unsupported): `playToGlasses(text)` (A2DP), `startMicCapture()`/`stopMicCapture()` (HFP, emits `AudioState.micLevel`), `state: Flow<AudioState>`. A2DP and HFP are mutually exclusive. If capturing mic alongside a camera stream: addStream → start+settle HFP mic → then start the stream, or the route fails silently. iOS uses AVAudioSession/AVAudioEngine; Android uses AudioManager/AudioRecord and needs RECORD_AUDIO.
 - Use `Spectra.mock()` for tests/previews — no token, no hardware. `MockConfig(autoGrantPermissions = false)` and `MockConfig(failRegistration = true)` exercise failure paths.
-- Build/test: `./gradlew :spectra:allTests` (no token). Use the Gradle wrapper, pinned to Gradle 8.10.2 — Gradle 9.x is incompatible with Kotlin Multiplatform 2.1.0. The Android backend needs a GitHub Packages token (`github_token` in local.properties, or `GH_TOKEN` env).
-- Publish locally: `./gradlew :spectra:publishToMavenLocal` publishes `com.umain.spectra:spectra:0.1.0` to ~/.m2; consume it from another project by adding `mavenLocal()` to its repositories.
+- Build/test: `./gradlew :spectra:allTests` (no token). Use the Gradle wrapper (Gradle 9.1 / AGP 9 / Kotlin 2.4 / Compose MP 1.11). The Android backend needs a GitHub Packages token (`github_token` in local.properties, or `GH_TOKEN` env).
+- Publish locally: `./gradlew :spectra:publishToMavenLocal` publishes `com.umain.spectra:spectra:0.2.0` to ~/.m2; consume it from another project by adding `mavenLocal()` to its repositories.
 
 ## Spectra documentation
 
