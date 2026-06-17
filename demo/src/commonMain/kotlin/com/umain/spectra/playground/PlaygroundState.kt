@@ -7,6 +7,7 @@ import androidx.compose.runtime.setValue
 import com.umain.spectra.Spectra
 import com.umain.spectra.SpectraClient
 import com.umain.spectra.camera.CameraStream
+import com.umain.spectra.camera.FrameRate
 import com.umain.spectra.camera.Photo
 import com.umain.spectra.camera.StreamConfiguration
 import com.umain.spectra.camera.StreamState
@@ -19,6 +20,8 @@ import com.umain.spectra.core.PermissionStatus
 import com.umain.spectra.core.RegistrationState
 import com.umain.spectra.core.SessionState
 import com.umain.spectra.core.WearableDevice
+import com.umain.spectra.display.ButtonStyle
+import com.umain.spectra.display.Direction
 import com.umain.spectra.display.Display
 import com.umain.spectra.display.DisplayContent
 import com.umain.spectra.display.DisplayState
@@ -79,26 +82,25 @@ class PlaygroundState(private val scope: CoroutineScope) {
         client.devices.onEach { devices = it }.launchIn(scope)
     }
 
-    fun initialize() = run("Initializing the SDK") {
+    fun initialize() = act("Initializing the SDK") {
         client.initialize()
         log = "Initialized. Now register the app with the (imaginary) Meta AI app."
     }
 
-    fun register() = run("Registering") {
+    fun register() = act("Registering") {
         client.startRegistration()
         log = "Registered. Note there's still no device — permission comes first."
     }
 
-    fun requestCameraPermission() = run("Requesting camera permission") {
+    fun requestCameraPermission() = act("Requesting camera permission") {
         cameraPermission = client.requestPermission(Permission.CAMERA)
         log = "Camera permission: $cameraPermission. A device should now appear above."
     }
 
-    fun startSession() = run("Starting a session") {
-        val result = client.createSession(DeviceSelector.Auto)
-        val newSession = result.getOrElse {
+    fun startSession() = act("Starting a session") {
+        val newSession = client.createSession(DeviceSelector.Auto).getOrElse {
             log = "Could not create a session: ${it.message}"
-            return@run
+            return@act
         }
         session = newSession
         newSession.state.onEach { sessionState = it }.launchIn(scope)
@@ -106,12 +108,18 @@ class PlaygroundState(private val scope: CoroutineScope) {
         log = "Session running. Stream the camera or push something to the display."
     }
 
-    fun startStream() = run("Opening camera stream") {
-        val active = session ?: run { log = "Start a session first."; return@run }
-        val result = active.openCameraStream(
-            StreamConfiguration(quality = VideoQuality.LOW, frameRate = com.umain.spectra.camera.FrameRate.FPS_15),
-        )
-        val newStream = result.getOrElse { log = "Stream failed: ${it.message}"; return@run }
+    fun startStream() = act("Opening camera stream") {
+        val active = session
+        if (active == null) {
+            log = "Start a session first."
+            return@act
+        }
+        val newStream = active.openCameraStream(
+            StreamConfiguration(quality = VideoQuality.LOW, frameRate = FrameRate.FPS_15),
+        ).getOrElse {
+            log = "Stream failed: ${it.message}"
+            return@act
+        }
         stream = newStream
         newStream.state.onEach { streamState = it }.launchIn(scope)
         newStream.frames.onEach { frame ->
@@ -122,18 +130,29 @@ class PlaygroundState(private val scope: CoroutineScope) {
         log = "Streaming. Those are procedurally-generated frames, not your living room."
     }
 
-    fun capturePhoto() = run("Capturing a photo") {
-        val active = stream ?: run { log = "Start a stream first."; return@run }
-        active.capturePhoto().onSuccess {
-            lastPhoto = it
-            log = "Captured a ${it.width}x${it.height} still mid-stream."
-        }.onFailure { log = "Capture failed: ${it.message}" }
+    fun capturePhoto() = act("Capturing a photo") {
+        val active = stream
+        if (active == null) {
+            log = "Start a stream first."
+            return@act
+        }
+        active.capturePhoto()
+            .onSuccess {
+                lastPhoto = it
+                log = "Captured a ${it.width}x${it.height} still mid-stream."
+            }
+            .onFailure { log = "Capture failed: ${it.message}" }
     }
 
-    fun showDisplayDemo() = run("Attaching the display") {
-        val active = session ?: run { log = "Start a session first."; return@run }
+    fun showDisplayDemo() = act("Attaching the display") {
+        val active = session
+        if (active == null) {
+            log = "Start a session first."
+            return@act
+        }
         val attached = display ?: active.attachDisplay().getOrElse {
-            log = "Display attach failed: ${it.message}"; return@run
+            log = "Display attach failed: ${it.message}"
+            return@act
         }.also { display = it }
         attached.state.onEach { displayState = it }.launchIn(scope)
         stepIndex = 0
@@ -149,12 +168,18 @@ class PlaygroundState(private val scope: CoroutineScope) {
                 text("Step ${stepIndex + 1} of ${TUTORIAL_STEPS.size}", style = TextStyle.META, color = TextColor.SECONDARY)
                 text(step.title, style = TextStyle.HEADING)
                 text(step.body, style = TextStyle.BODY)
-                flexBox(direction = com.umain.spectra.display.Direction.ROW, gap = 8) {
-                    button("Back", style = com.umain.spectra.display.ButtonStyle.OUTLINE, iconName = IconName.ARROW_LEFT, onClick = {
-                        if (stepIndex > 0) { stepIndex -= 1; pushTutorialStep(target) }
+                flexBox(direction = Direction.ROW, gap = 8) {
+                    button("Back", style = ButtonStyle.OUTLINE, iconName = IconName.ARROW_LEFT, onClick = {
+                        if (stepIndex > 0) {
+                            stepIndex -= 1
+                            pushTutorialStep(target)
+                        }
                     })
                     button("Next", iconName = IconName.ARROW_RIGHT, onClick = {
-                        if (stepIndex < TUTORIAL_STEPS.lastIndex) { stepIndex += 1; pushTutorialStep(target) }
+                        if (stepIndex < TUTORIAL_STEPS.lastIndex) {
+                            stepIndex += 1
+                            pushTutorialStep(target)
+                        }
                     })
                 }
             }
@@ -163,7 +188,7 @@ class PlaygroundState(private val scope: CoroutineScope) {
         scope.launch { target.sendContent(content) }
     }
 
-    fun reset() = run("Resetting") {
+    fun reset() = act("Resetting") {
         stream?.close(); stream = null
         session?.stop(); session = null
         display?.close(); display = null
@@ -174,7 +199,12 @@ class PlaygroundState(private val scope: CoroutineScope) {
         log = "Reset. The mock has been switched off and on again, as is tradition."
     }
 
-    private inline fun run(label: String, crossinline block: suspend () -> Unit) {
+    /**
+     * Launch one UI action on [scope], logging its label first. Named [act], not
+     * `run`, specifically so it doesn't shadow `kotlin.run` and turn every
+     * `return@run` into a debugging anecdote.
+     */
+    private inline fun act(label: String, crossinline block: suspend () -> Unit) {
         scope.launch {
             log = "$label..."
             block()

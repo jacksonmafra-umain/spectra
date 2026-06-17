@@ -3,6 +3,7 @@ package com.umain.spectra.playground
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -36,6 +37,7 @@ import kotlinx.coroutines.Dispatchers
  * @param scope a coroutine scope tied to the host. Defaults to a Main-dispatched
  *   one for previews; real entry points hand in their own.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun App(scope: CoroutineScope = CoroutineScope(Dispatchers.Main)) {
     val state = remember { PlaygroundState(scope) }
