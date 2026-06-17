@@ -14,6 +14,9 @@ public interface ActivityBridge {
     public fun launchRegistration()
     public fun launchUnregistration()
     public suspend fun requestCameraPermission(): PermissionStatus
+
+    /** Opens the Meta AI screen to install/update the on-glasses DAT app. */
+    public fun openGlassesAppUpdate()
 }
 
 /**

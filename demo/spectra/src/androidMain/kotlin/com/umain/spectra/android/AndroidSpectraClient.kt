@@ -9,6 +9,7 @@ import com.umain.spectra.core.DeviceSession
 import com.umain.spectra.core.Permission
 import com.umain.spectra.core.PermissionStatus
 import com.umain.spectra.core.RegistrationState
+import com.umain.spectra.core.SpectraAudio
 import com.umain.spectra.core.SpectraError
 import com.umain.spectra.core.SpectraResult
 import com.umain.spectra.core.WearableDevice
@@ -21,6 +22,7 @@ import com.meta.wearable.dat.core.selectors.AutoDeviceSelector
 import com.meta.wearable.dat.core.selectors.SpecificDeviceSelector
 import com.meta.wearable.dat.core.types.Permission as MetaPermission
 import com.meta.wearable.dat.core.types.PermissionStatus as MetaPermissionStatus
+import com.meta.wearable.dat.core.types.WearablesError
 
 /**
  * Android [SpectraClient] backed by the real toolkit (mwdat 0.7). Core +
@@ -34,6 +36,14 @@ internal class AndroidSpectraClient(
     private val appContext: Context,
     private val bridge: ActivityBridge,
 ) : SpectraClient {
+
+    // Initialize the SDK eagerly, before the flow properties below touch
+    // Wearables — PlaygroundState starts collecting them at construction, long
+    // before the user taps "Initialize". Skipping this throws "Wearables not
+    // initialized" the moment the client is built.
+    private val initResult = Wearables.initialize(appContext)
+
+    override val audio: SpectraAudio = AndroidSpectraAudio(appContext)
 
     override val registrationState: Flow<RegistrationState> =
         Wearables.registrationState.map { meta ->
@@ -58,10 +68,15 @@ internal class AndroidSpectraClient(
             }
         }
 
+    // Wearables was already initialized in the constructor; just report the
+    // outcome. ALREADY_INITIALIZED counts as success (the SDK is up either way).
     override suspend fun initialize(): SpectraResult<Unit> =
-        Wearables.initialize(appContext).fold(
+        initResult.fold(
             onSuccess = { Result.success(Unit) },
-            onFailure = { error, cause -> spectraFailure(SpectraError.Backend(error.description, cause)) },
+            onFailure = { error, cause ->
+                if (error == WearablesError.ALREADY_INITIALIZED) Result.success(Unit)
+                else spectraFailure(SpectraError.Backend(error.description, cause))
+            },
         )
 
     override suspend fun startRegistration(): SpectraResult<Unit> =
@@ -87,6 +102,9 @@ internal class AndroidSpectraClient(
             onSuccess = { session -> Result.success(AndroidDeviceSession(session)) },
             onFailure = { error, cause -> spectraFailure(SpectraError.Backend(error.description, cause)) },
         )
+
+    override suspend fun openGlassesAppUpdate(): SpectraResult<Unit> =
+        runCatchingSpectra { bridge.openGlassesAppUpdate() }
 
     override suspend fun shutdown() {
         // Sessions own their lifecycle; nothing global to release.
