@@ -114,6 +114,7 @@
     <h4>Platforms</h4>
     <a href="#android">Android</a>
     <a href="#ios">iOS</a>
+    <a href="#golive">Go live (Meta setup)</a>
     <h4>Reference</h4>
     <a href="#agents">For AI agents</a>
     <a href="#known">Known issues</a>
@@ -340,6 +341,74 @@ display.sendContent {
     <section id="ios">
       <h2>iOS</h2>
       <p>Get the client from <code>Spectra.create()</code>. Honest caveat: Meta's iOS toolkit is a <em>Swift</em> package, and Kotlin/Native speaks Objective-C interop, not Swift. So a production iOS build needs a thin <code>@objc</code> Swift shim that re-exposes the calls you use, wired in via <code>cinterop</code>. Spectra ships that bridge scaffolded and fully documented — the mapping mirrors Android one-to-one. Until you write the shim, <code>Spectra.mock()</code> runs fine on iOS, including in SwiftUI previews.</p>
+    </section>
+
+    <section id="golive">
+      <h2>Go live: wiring it to Meta AI and the glasses</h2>
+      <p>Everything above runs on the mock. This is what it takes to point Spectra at actual hardware — which means dealing with Meta's Wearables Developer Center, a Managed Meta Account, and a permissions review. None of it is hard. All of it is bureaucratic. Budget an afternoon and a strong opinion about acronyms.</p>
+
+      <div class="note"><b>Set expectations first.</b> The toolkit is a developer preview. There is <em>no App Store / Play Store distribution yet</em> — everything is invite-only via release channels, and on iOS the <code>ExternalAccessory</code> dependency will get you rejected from the App Store if you try anyway. So "go live" here means "works for testers you invite", not "shipped to the public". Plan accordingly.</div>
+
+      <h3>Step 1 — One organization, one MMA, and the colleague who already made it</h3>
+      <p>Your company gets exactly <b>one</b> Managed Meta Account (MMA) organization in <a href="https://work.meta.com/admin/work_tools_overview">Admin Center</a>. Before you create one, ask IT / your lead whether it already exists, because creating a second one is the kind of mistake that generates a meeting. One admin (IT, lead, PM) signs up to the <a href="https://wearables.developer.meta.com/">Wearables Developer Center</a>, gets redirected to set up the MMA org at work.meta.com under the company's real name, and then invites everyone else. Only members of that MMA org can join your Developer Center team.</p>
+      <p>Reference: <a href="https://wearables.developer.meta.com/docs/develop/dat/onboarding-and-organization-management/">Onboarding & organization management</a>.</p>
+
+      <h3>Step 2 — Create the project and harvest your credentials</h3>
+      <p>In the Developer Center, <b>New project</b> → name + description. Open <b>Configuration</b> and define your mobile app. This is where you get the two strings the SDK actually cares about: <code>APPLICATION_ID</code> and <code>CLIENT_TOKEN</code>.</p>
+      <div class="note">If your Android <b>package name</b> and iOS <b>bundle ID</b> differ (they almost always do), create <em>two separate apps</em> in the project — one Android-only, one iOS-only. Also: a hyphen <code>-</code> is not allowed in iOS bundle IDs. Yes, really. Name accordingly before you waste an hour.</div>
+
+      <h3>Step 3 — Product listing and the permissions essay</h3>
+      <p>Provide an app name and icon (PNG/JPEG, up to 200&times;200, dark + light if you're keen). Then, under <b>Permissions</b>, justify every capability you request — camera, microphone, voice invocation. This text is for Meta's internal reviewers, not end users; they use it to decide whether your camera request is reasonable or just nosy. Write it like a human who has a legitimate reason, because someone reads it.</p>
+      <p>Reference: <a href="https://wearables.developer.meta.com/docs/develop/dat/manage-projects/">Manage projects</a>.</p>
+
+      <h3>Step 4 — Put the credentials in the app</h3>
+      <p>Outside Developer Mode, the SDK uses these for <b>attestation</b> — proving your app is the app it claims to be. Get them wrong and it simply won't connect, with an error that won't hold your hand.</p>
+      <p><b>Android</b> — in <code>AndroidManifest.xml</code>, plus the Bluetooth permissions and the callback URL scheme:</p>
+      <pre><code class="language-xml">&lt;uses-permission android:name="android.permission.BLUETOOTH" /&gt;
+&lt;uses-permission android:name="android.permission.BLUETOOTH_CONNECT" /&gt;
+&lt;uses-permission android:name="android.permission.INTERNET" /&gt;
+
+&lt;application&gt;
+  &lt;meta-data android:name="com.meta.wearable.mwdat.APPLICATION_ID" android:value="${mwdat_application_id}" /&gt;
+  &lt;meta-data android:name="com.meta.wearable.mwdat.CLIENT_TOKEN"   android:value="${mwdat_client_token}" /&gt;
+  &lt;meta-data android:name="com.meta.wearable.mwdat.DAM_ENABLED"    android:value="true" /&gt;
+
+  &lt;activity android:name=".MainActivity" ...&gt;
+    &lt;intent-filter&gt;
+      &lt;action android:name="android.intent.action.VIEW" /&gt;
+      &lt;category android:name="android.intent.category.DEFAULT" /&gt;
+      &lt;category android:name="android.intent.category.BROWSABLE" /&gt;
+      &lt;data android:scheme="yourappscheme" /&gt;
+    &lt;/intent-filter&gt;
+  &lt;/activity&gt;
+&lt;/application&gt;</code></pre>
+      <p><b>iOS</b> — in <code>Info.plist</code>, the <code>MWDAT</code> dictionary plus the external-accessory and Bluetooth keys:</p>
+      <pre><code class="language-xml">&lt;key&gt;MWDAT&lt;/key&gt;
+&lt;dict&gt;
+  &lt;key&gt;AppLinkURLScheme&lt;/key&gt;&lt;string&gt;yourappscheme://&lt;/string&gt;
+  &lt;key&gt;MetaAppID&lt;/key&gt;&lt;string&gt;$(META_APP_ID)&lt;/string&gt;
+  &lt;key&gt;ClientToken&lt;/key&gt;&lt;string&gt;$(CLIENT_TOKEN)&lt;/string&gt;
+  &lt;key&gt;TeamID&lt;/key&gt;&lt;string&gt;$(DEVELOPMENT_TEAM)&lt;/string&gt;
+  &lt;key&gt;DAMEnabled&lt;/key&gt;&lt;true/&gt;
+&lt;/dict&gt;
+&lt;key&gt;UISupportedExternalAccessoryProtocols&lt;/key&gt;
+&lt;array&gt;&lt;string&gt;com.meta.ar.wearable&lt;/string&gt;&lt;/array&gt;</code></pre>
+      <div class="note">In <b>Developer Mode</b> attestation is skipped, so you can leave these as <code>0</code> / blank while prototyping. The catch: only <em>one</em> third-party app stays registered at a time in Developer Mode — registering a new one silently unregisters the last. And if you pre-process <code>Info.plist</code>, the <code>://</code> gets eaten unless you add the <code>-traditional-cpp</code> flag. Future-you says thanks.</div>
+
+      <h3>Step 5 — Versions and release channels (a.k.a. how testers get in)</h3>
+      <p>Cut a version (<b>Distribute → Versions → Create new version</b>, pick Major/Minor/Patch like a responsible adult), then create a <b>release channel</b> and invite testers by email. Each channel holds one version at a time; channels are invite-only. The emails must be real <b>Meta Accounts</b> — note, <em>not</em> Managed Meta Accounts; the two sound identical and are not, which is exactly the sort of thing that eats a morning. Testers accept at <a href="https://wearables.meta.com/invites">wearables.meta.com/invites</a>.</p>
+      <p>Reference: <a href="https://wearables.developer.meta.com/docs/develop/dat/set-up-release-channels/">Set up release channels</a>.</p>
+
+      <h3>Step 6 — Prepare the actual glasses</h3>
+      <p>On the test device: Meta AI app <b>v254+</b>, glasses firmware <b>v20+</b> (Ray-Ban Meta) or <b>v21+</b> (Ray-Ban Display). Pair the glasses, then enable Developer Mode: <b>Settings → App Info → tap the app version five times</b>, toggle it on. For the <b>display</b> feature you also install DAT onto the glasses themselves: Meta AI <b>v272+</b>, firmware <b>v125+</b>, put the glasses on, then trigger the install from Dev Mode (keep the app open; it takes 5–10 seconds, and it'll refuse below 10% battery because of course it will).</p>
+      <p>Reference: <a href="https://wearables.developer.meta.com/docs/develop/dat/getting-started-toolkit/">Getting started / setup</a> and <a href="https://wearables.developer.meta.com/docs/develop/dat/display-overview/">Display overview</a>.</p>
+
+      <h3>Step 7 — The tester's side, in the Meta AI app</h3>
+      <p>Once invited, a tester picks the right <b>Release Channel</b> (device menu → Settings → Release Channel) and manages what your app may touch under <b>Settings → Connected Apps</b> → your app → camera set to Always allow / Always ask / Don't allow. Remember the rule from the lifecycle docs: a device won't even appear to your code until the user has granted at least one permission here.</p>
+
+      <h3>Step 8 — Swap the mock for the real backend</h3>
+      <p>With all of the above in place, replace <code>Spectra.mock()</code> with the real client: on Android, wire the delegation from <code>spectra/android-reference/</code>, re-add the <code>mwdat-*</code> dependencies, and supply your GitHub Packages token; on iOS, finish the <code>@objc</code> Swift shim and connect it via <code>cinterop</code>. The flow your code calls — initialize, register, permit, session, stream, display — does not change one line. That was the whole point.</p>
+      <div class="note"><b>When it won't connect</b>, it's almost always one of: wrong <code>APPLICATION_ID</code>/<code>CLIENT_TOKEN</code>, a tester not on the channel, a permission not granted in the Meta AI app, or glasses that wandered off (folded hinges drop Bluetooth and stop the session). Check those four before blaming the SDK. Then check them again.</div>
     </section>
 
     <section id="agents">
