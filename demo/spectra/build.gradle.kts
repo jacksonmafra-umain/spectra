@@ -10,7 +10,7 @@ plugins {
 
 // Coordinates of the published artifact: com.umain.spectra:spectra:<version>.
 group = "com.umain.spectra"
-version = "0.1.0"
+version = "0.2.0"
 
 kotlin {
     // No framework block here: this is a library consumed by other modules (and
