@@ -1,29 +1,41 @@
-# Gradle
+# --- Gradle / Kotlin -------------------------------------------------------
 .gradle/
 build/
-!gradle/wrapper/gradle-wrapper.jar
+**/build/
+.kotlin/
+# Secrets and machine-specific config (holds sdk.dir + github_token)
+local.properties
+secrets.properties
 
-# Kotlin / KMP
+# --- Android ---------------------------------------------------------------
+*.apk
+*.aab
+*.keystore
+captures/
+
+# --- Xcode / iOS -----------------------------------------------------------
+xcuserdata/
+**/xcuserdata/
+*.xcuserstate
+DerivedData/
+**/DerivedData/
+.swiftpm/
+*.hmap
+*.ipa
+*.dSYM.zip
+
+# --- Kotlin/Native ---------------------------------------------------------
 *.klib
-kotlin-js-store/
 
-# IDE
+# --- IDEs ------------------------------------------------------------------
 .idea/
 *.iml
 .fleet/
 .vscode/
 
-# macOS / Xcode
-.DS_Store
-xcuserdata/
-*.xcodeproj/*
-!*.xcodeproj/project.pbxproj
-
-# Secrets — the kind of thing you only commit once, then never live down
-local.properties
-*.keystore
-secrets.properties
-
-# Node (docs site is static, but tooling leaves crumbs)
+# --- Node / Vercel (docs site) ---------------------------------------------
 node_modules/
 .vercel/
+
+# --- macOS -----------------------------------------------------------------
+.DS_Store
