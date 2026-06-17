@@ -104,6 +104,7 @@
     <a href="#why">Why Spectra</a>
     <a href="#install">Install</a>
     <a href="#quickstart">Quickstart</a>
+    <a href="#local">Build, test & publish</a>
     <a href="#mock">Test with the mock</a>
     <h4>Concepts</h4>
     <a href="#lifecycle">Session lifecycle</a>
@@ -147,7 +148,7 @@ dependencyResolutionManagement {
             credentials {
                 username = ""
                 password = providers.gradleProperty("github_token").orNull
-                    ?: System.getenv("GITHUB_TOKEN") ?: ""
+                    ?: System.getenv("GH_TOKEN") ?: ""
             }
         }
     }
@@ -161,6 +162,46 @@ kotlin {
     }
 }</code></pre>
       <div class="note">The <b>mock</b> client needs no token and no repository. You only need the GitHub token to compile the real Android backend. Build your UI first; wire the token later.</div>
+    </section>
+
+    <section id="local">
+      <h2>Build, test &amp; publish locally</h2>
+      <p>Use the Gradle <b>wrapper</b>. The project is pinned to Gradle 8.10.2 — the version AGP 8.5.2 / Kotlin 2.1.0 / Compose 1.7.1 expect. Gradle 9.x will not build it (it removed an internal API that Kotlin Multiplatform still calls). If the wrapper is missing, bootstrap it once with any Gradle 8.x on your PATH: <code>gradle wrapper --gradle-version 8.10.2</code>.</p>
+
+      <h3>Run the tests</h3>
+      <p>The mock-driven test suite needs no glasses and no token. It's the fastest way to confirm everything works.</p>
+      <pre><code class="language-bash">./gradlew :spectra:allTests                # mock-driven tests, no token needed
+./gradlew :spectra:compileKotlinMetadata   # compile common code + mock
+./gradlew check                            # compile + tests + lint, the lot</code></pre>
+
+      <h3>Build &amp; run the demo</h3>
+      <pre><code class="language-bash">./gradlew :demo:assembleDebug    # build the Android Playground apk
+./gradlew :demo:installDebug     # install on a device/emulator, then launch "Spectra Playground"</code></pre>
+      <div class="note">The <b>real Android backend</b> resolves the <code>mwdat-*</code> artifacts from GitHub Packages, which needs a token with <code>read:packages</code>. Put <code>github_token=ghp_...</code> in <code>local.properties</code> (gitignored) or export it — <code>settings.gradle.kts</code> reads the <code>GH_TOKEN</code> environment variable. The mock and <code>:spectra:allTests</code> build without it.</div>
+
+      <h3>Publish to Maven Local</h3>
+      <p>Consume Spectra from another project on your machine, no remote repository required. This publishes the multiplatform metadata plus the Android and iOS variants to <code>~/.m2/repository</code> under <code>com.umain.spectra:spectra:0.1.0</code>.</p>
+      <pre><code class="language-bash">./gradlew :spectra:publishToMavenLocal
+ls ~/.m2/repository/com/umain/spectra      # verify it landed</code></pre>
+      <p>Then point the consuming project at Maven Local and depend on it:</p>
+      <pre><code class="language-kotlin">// settings.gradle.kts of the OTHER project — mavenLocal() first so it wins
+dependencyResolutionManagement {
+    repositories {
+        mavenLocal()
+        google()
+        mavenCentral()
+    }
+}
+
+// shared/build.gradle.kts of the OTHER project
+kotlin {
+    sourceSets {
+        commonMain.dependencies {
+            implementation("com.umain.spectra:spectra:0.1.0")
+        }
+    }
+}</code></pre>
+      <div class="note">Bump the version in one place — <code>gradle/libs.versions.toml</code> (<code>spectra = "..."</code>) — and the build coordinates follow. Maven Local never deletes old versions, so clear stale ones from <code>~/.m2/repository/com/umain/spectra</code> if they pile up.</div>
     </section>
 
     <section id="quickstart">

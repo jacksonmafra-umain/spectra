@@ -20,6 +20,8 @@
 - Display: every `sendContent` replaces the whole screen; no partial updates; the glasses retain no state. Always keep a root (L0) view because the back gesture from root ends the session.
 - Microphone uses platform HFP, not the Meta AI permission flow.
 - Use `Spectra.mock()` for tests/previews — no token, no hardware. `MockConfig(autoGrantPermissions = false)` and `MockConfig(failRegistration = true)` exercise failure paths.
+- Build/test: `./gradlew :spectra:allTests` (no token). Use the Gradle wrapper, pinned to Gradle 8.10.2 — Gradle 9.x is incompatible with Kotlin Multiplatform 2.1.0. The Android backend needs a GitHub Packages token (`github_token` in local.properties, or `GH_TOKEN` env).
+- Publish locally: `./gradlew :spectra:publishToMavenLocal` publishes `com.umain.spectra:spectra:0.1.0` to ~/.m2; consume it from another project by adding `mavenLocal()` to its repositories.
 
 ## Spectra documentation
 
