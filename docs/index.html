@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Spectra — Kotlin Multiplatform wrapper for Meta's Wearables Device Access Toolkit</title>
+<meta name="description" content="Spectra is a Kotlin Multiplatform wrapper around Meta's Wearables Device Access Toolkit. One coroutine-and-Flow API for registration, camera streaming, photo capture and the Ray-Ban Display, on Android and iOS." />
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css" />
+<style>
+  :root{
+    --bg:#0b0d12; --panel:#11141c; --panel-2:#161a24; --line:#222838;
+    --txt:#e6e9f0; --muted:#9aa3b2; --accent:#7c8cff; --accent-2:#36e0c9;
+    --code:#0e1118; --maxw:1180px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:radial-gradient(1200px 600px at 75% -10%,rgba(124,140,255,.14),transparent),var(--bg);
+    color:var(--txt);font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  code{font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.92em}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
+  header.top{position:sticky;top:0;z-index:20;background:rgba(11,13,18,.82);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  header.top .wrap{display:flex;align-items:center;gap:16px;height:60px}
+  .brand{font-weight:800;letter-spacing:.5px;font-size:18px;display:flex;align-items:center;gap:10px}
+  .dot{width:12px;height:12px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-2));box-shadow:0 0 18px rgba(124,140,255,.7)}
+  header.top nav{margin-left:auto;display:flex;gap:18px;font-size:14px}
+  header.top nav a{color:var(--muted)}
+  .hero{padding:84px 0 56px;border-bottom:1px solid var(--line)}
+  .pill{display:inline-block;font-size:12px;color:var(--accent-2);border:1px solid rgba(54,224,201,.35);border-radius:999px;padding:4px 12px;margin-bottom:18px;letter-spacing:.4px}
+  .hero h1{font-size:clamp(34px,5vw,56px);line-height:1.05;margin:.1em 0 .2em;font-weight:800}
+  .hero h1 .grad{background:linear-gradient(135deg,var(--accent),var(--accent-2));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero p.lede{font-size:20px;color:var(--muted);max-width:760px}
+  .cta{margin-top:28px;display:flex;gap:12px;flex-wrap:wrap}
+  .btn{display:inline-block;padding:11px 18px;border-radius:10px;font-weight:600;font-size:14px}
+  .btn.primary{background:linear-gradient(135deg,var(--accent),#5566f0);color:#fff}
+  .btn.ghost{border:1px solid var(--line);color:var(--txt)}
+  .trio{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:42px}
+  .trio .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}
+  .trio .card h3{margin:.2em 0 .3em;font-size:16px}
+  .trio .card span{font-size:12px;color:var(--accent-2);text-transform:uppercase;letter-spacing:.6px}
+  .trio .card p{margin:.3em 0 0;color:var(--muted);font-size:14px}
+  .layout{display:grid;grid-template-columns:240px 1fr;gap:40px;padding:48px 0 80px}
+  aside{position:sticky;top:76px;align-self:start;height:calc(100vh - 96px);overflow:auto;border-right:1px solid var(--line);padding-right:18px}
+  aside h4{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin:18px 0 8px}
+  aside a{display:block;color:var(--txt);opacity:.82;font-size:14px;padding:5px 0}
+  aside a:hover{opacity:1;text-decoration:none;color:var(--accent)}
+  main section{margin-bottom:54px;scroll-margin-top:80px}
+  main h2{font-size:28px;margin:0 0 14px;font-weight:750}
+  main h3{font-size:18px;margin:28px 0 8px}
+  p{color:#d4d9e3}
+  .muted{color:var(--muted)}
+  pre{background:var(--code)!important;border:1px solid var(--line);border-radius:12px;padding:16px 18px;overflow:auto;margin:14px 0}
+  pre code{background:none;padding:0}
+  :not(pre)>code{background:var(--panel-2);border:1px solid var(--line);border-radius:6px;padding:1px 6px}
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14px}
+  th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-weight:600}
+  .note{background:var(--panel);border-left:3px solid var(--accent);border-radius:0 10px 10px 0;padding:12px 16px;margin:16px 0;color:var(--muted)}
+  .note b{color:var(--txt)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-size:13px}
+  footer .wrap{display:flex;gap:18px;flex-wrap:wrap;justify-content:space-between}
+  @media(max-width:880px){.layout{grid-template-columns:1fr}aside{display:none}.trio{grid-template-columns:1fr}.grid2{grid-template-columns:1fr}header.top nav{display:none}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand"><span class="dot"></span> Spectra</div>
+    <nav>
+      <a href="#install">Install</a>
+      <a href="#quickstart">Quickstart</a>
+      <a href="#camera">Camera</a>
+      <a href="#display">Display</a>
+      <a href="#agents">For agents</a>
+      <a href="/llms.txt">llms.txt</a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+  <section class="hero">
+    <span class="pill">Kotlin Multiplatform · developer preview · v0.1.0</span>
+    <h1>Meta's glasses SDK,<br/><span class="grad">minus the boilerplate</span> and most of the suffering.</h1>
+    <p class="lede">Spectra is a Kotlin Multiplatform wrapper around Meta's Wearables Device Access Toolkit. Registration, permissions, camera streaming, photo capture and the Ray-Ban Display — one coroutine-and-<code>Flow</code> API in <code>commonMain</code>, the platform plumbing hidden where it belongs.</p>
+    <div class="cta">
+      <a class="btn primary" href="#quickstart">Get started</a>
+      <a class="btn ghost" href="#agents">Wire up your AI agent</a>
+    </div>
+    <div class="trio">
+      <div class="card"><span>Library</span><h3>Spectra</h3><p>The wrapper. Add it, call it, ship.</p></div>
+      <div class="card"><span>Demo</span><h3>Spectra Playground</h3><p>Compose Multiplatform app running the whole flow on a mock device.</p></div>
+      <div class="card"><span>Docs</span><h3>Spectra Docs</h3><p>This page, plus an <a href="/llms.txt">llms.txt</a> and <a href="/AGENTS.md">AGENTS.md</a> for the robots.</p></div>
+    </div>
+  </section>
+</div>
+
+<div class="wrap layout">
+  <aside>
+    <h4>Start here</h4>
+    <a href="#why">Why Spectra</a>
+    <a href="#install">Install</a>
+    <a href="#quickstart">Quickstart</a>
+    <a href="#mock">Test with the mock</a>
+    <h4>Concepts</h4>
+    <a href="#lifecycle">Session lifecycle</a>
+    <a href="#permissions">Registration & permissions</a>
+    <a href="#camera">Camera & photos</a>
+    <a href="#display">The display</a>
+    <h4>Platforms</h4>
+    <a href="#android">Android</a>
+    <a href="#ios">iOS</a>
+    <h4>Reference</h4>
+    <a href="#agents">For AI agents</a>
+    <a href="#known">Known issues</a>
+    <a href="#links">Meta references</a>
+  </aside>
+
+  <main>
+    <section id="why">
+      <h2>Why Spectra exists</h2>
+      <p>Meta's Wearables Device Access Toolkit is genuinely capable — it gives your app the wearer's-eye camera, open-ear audio, and on Ray-Ban Display glasses a declarative display API. It's also two separate native SDKs (Swift and Kotlin), shipped through GitHub Packages behind a token, with callbacks, result builders, and a fair few ways to hold it wrong.</p>
+      <p>Spectra collapses all of that into one small, opinionated, multiplatform surface:</p>
+      <table>
+        <tr><th>You write</th><th>Spectra deals with</th></tr>
+        <tr><td>One <code>SpectraClient</code> against <code>commonMain</code></td><td>Two native SDKs and their differing call shapes</td></tr>
+        <tr><td><code>Flow</code> and <code>suspend</code> functions</td><td>Listeners, publishers, result builders, activity-result contracts</td></tr>
+        <tr><td><code>Result&lt;T&gt;</code> with a typed <code>SpectraError</code></td><td>Errors that politely decline to explain themselves</td></tr>
+        <tr><td><code>Spectra.mock()</code></td><td>No glasses, no token, no Bluetooth seance, full test coverage</td></tr>
+      </table>
+      <div class="note"><b>Status:</b> the toolkit is a developer preview and so is Spectra (v0.1.0). The API will move. Pin your version and read the changelog before you upgrade.</div>
+    </section>
+
+    <section id="install">
+      <h2>Install</h2>
+      <p>Spectra targets Android (minSdk 29) and iOS (15.2+), matching the Meta AI app's floor. Add the library to your shared module's <code>commonMain</code>:</p>
+      <pre><code class="language-kotlin">// settings.gradle.kts — Meta ships the real SDK through GitHub Packages,
+// so the Android target needs a token with read:packages.
+dependencyResolutionManagement {
+    repositories {
+        google(); mavenCentral()
+        maven {
+            url = uri("https://maven.pkg.github.com/facebook/meta-wearables-dat-android")
+            credentials {
+                username = ""
+                password = providers.gradleProperty("github_token").orNull
+                    ?: System.getenv("GITHUB_TOKEN") ?: ""
+            }
+        }
+    }
+}</code></pre>
+      <pre><code class="language-kotlin">// shared/build.gradle.kts
+kotlin {
+    sourceSets {
+        commonMain.dependencies {
+            implementation("com.umain.spectra:spectra:0.1.0")
+        }
+    }
+}</code></pre>
+      <div class="note">The <b>mock</b> client needs no token and no repository. You only need the GitHub token to compile the real Android backend. Build your UI first; wire the token later.</div>
+    </section>
+
+    <section id="quickstart">
+      <h2>Quickstart</h2>
+      <p>The whole integration is a fixed sequence: initialize, register, permit, session, stream. Skip a step and the SDK tells you off via a typed error. Here it is end to end against the mock — identical shape on real hardware.</p>
+      <pre><code class="language-kotlin">import com.umain.spectra.Spectra
+import com.umain.spectra.core.*
+import com.umain.spectra.camera.*
+
+suspend fun run() {
+    val spectra = Spectra.mock()          // swap for Spectra.create(context, bridge) on Android
+
+    spectra.initialize()
+    spectra.startRegistration()           // deeplinks to the Meta AI app on device
+    spectra.requestPermission(Permission.CAMERA)
+
+    // A device only appears AFTER registration + a granted permission.
+    val device = spectra.devices.first { it.isNotEmpty() }.first()
+
+    val session = spectra.createSession(DeviceSelector.Auto).getOrThrow()
+    session.start()
+    session.state.first { it == SessionState.RUNNING }
+
+    val stream = session.openCameraStream(
+        StreamConfiguration(quality = VideoQuality.LOW, frameRate = FrameRate.FPS_15)
+    ).getOrThrow()
+
+    stream.frames
+        .onEach { frame -> render(frame) }   // ByteArray RGBA; convert at the edge
+        .launchIn(scope)
+    stream.start()
+
+    val photo = stream.capturePhoto().getOrThrow()
+}</code></pre>
+      <div class="note"><b>The one gotcha worth tattooing:</b> a device will not show up in <code>devices</code> until the user has both registered <em>and</em> granted at least one permission. An empty device list after registration almost always means you forgot the permission.</div>
+    </section>
+
+    <section id="mock">
+      <h2>Test with the mock</h2>
+      <p><code>Spectra.mock()</code> is a complete in-memory simulation. It enforces the same preconditions as the real SDK — initialize before use, register before sessions, permit before a device appears — so passing against the mock means you actually learned the steps. Drive the failure paths on purpose:</p>
+      <pre><code class="language-kotlin">// Rehearse "user said no" without misconfiguring anything.
+val denied = Spectra.mock(MockConfig(autoGrantPermissions = false))
+
+// Rehearse a failed registration and your error UI.
+val broken = Spectra.mock(MockConfig(failRegistration = true))</code></pre>
+      <p>It runs on the JVM, in CI, and inside a Compose or SwiftUI preview. The <a href="https://github.com/">Spectra Playground</a> demo is built entirely on it.</p>
+    </section>
+
+    <section id="lifecycle">
+      <h2>Session lifecycle</h2>
+      <p>The single most important rule: the <em>device</em> drives session state and tells you asynchronously. You react. You never assume the cause — the SDK deliberately won't tell you <em>why</em> a session paused, only that it did.</p>
+      <table>
+        <tr><th>State</th><th>Meaning</th><th>What you do</th></tr>
+        <tr><td><code>STOPPED</code></td><td>Inactive, not reconnecting</td><td>Free resources, wait for the user</td></tr>
+        <tr><td><code>STARTING</code></td><td>Coming up</td><td>Show a spinner, hold work</td></tr>
+        <tr><td><code>RUNNING</code></td><td>Live</td><td>Do your live work here, and only here</td></tr>
+        <tr><td><code>PAUSED</code></td><td>Temporarily suspended</td><td>Hold; do <b>not</b> try to restart it</td></tr>
+      </table>
+      <pre><code class="language-kotlin">session.state.collect { state ->
+    when (state) {
+        SessionState.RUNNING -> showLive()
+        SessionState.PAUSED  -> holdAndWait()   // it may resume or stop; both are fine
+        SessionState.STOPPED -> releaseAndOfferRestart()
+        SessionState.STARTING -> showConnecting()
+    }
+}</code></pre>
+    </section>
+
+    <section id="permissions">
+      <h2>Registration & permissions</h2>
+      <p>Registration is the one-time handshake that links your app to the user's glasses through the Meta AI app. Camera permission is then granted per app, checked across <em>all</em> of the user's linked glasses — if any pair has said yes, you're granted. Spectra hides that bookkeeping.</p>
+      <pre><code class="language-kotlin">spectra.registrationState.collect { state ->
+    when (state) {
+        RegistrationState.Registered   -> enableFeatures()
+        RegistrationState.Registering  -> showProgress()
+        is RegistrationState.Failed    -> showError(state.reason)
+        RegistrationState.NotRegistered -> showConnectCta()
+    }
+}
+
+when (spectra.checkPermission(Permission.CAMERA)) {
+    PermissionStatus.GRANTED -> startStreaming()
+    else -> spectra.requestPermission(Permission.CAMERA)
+}</code></pre>
+      <div class="note">Microphone input on real hardware goes through the platform's Hands-Free Profile (HFP) over Bluetooth, not the Meta AI permission flow — so you still request the mic with the normal OS dialog. Spectra models <code>Permission.MICROPHONE</code> for completeness.</div>
+    </section>
+
+    <section id="camera">
+      <h2>Camera & photos</h2>
+      <p>Frames arrive as a <code>Flow&lt;VideoFrame&gt;</code> of raw bytes. Collect on a background dispatcher and convert to a platform image at the very last moment, on the thread that draws.</p>
+      <pre><code class="language-kotlin">val stream = session.openCameraStream(
+    StreamConfiguration(quality = VideoQuality.MEDIUM, frameRate = FrameRate.FPS_24)
+).getOrThrow()
+
+stream.frames.onEach { frame ->
+    // frame.bytes is RGBA, frame.width x frame.height
+}.launchIn(scope)
+
+stream.start()
+val photo: Photo = stream.capturePhoto().getOrThrow()  // a still, mid-stream</code></pre>
+      <div class="note"><b>Bluetooth has the final say.</b> Resolution and frame rate are requests. The link runs an automatic quality ladder — drop resolution first, then frame rate, never below 15fps. Counter-intuitively, asking for <em>less</em> can look <em>better</em>, because the per-frame compressor has less to throw away. You also can't reconfigure a stream within a session: stop it and start a new one.</div>
+    </section>
+
+    <section id="display">
+      <h2>The display (Ray-Ban Display)</h2>
+      <p>Build screens with a declarative DSL that will feel like Compose or SwiftUI, because that's deliberate. Each <code>sendContent</code> replaces the entire display — there's no partial update, and the glasses retain no state. Your phone is the single source of truth.</p>
+      <pre><code class="language-kotlin">val display = session.attachDisplay().getOrThrow()
+display.state.first { it == DisplayState.STARTED }
+
+display.sendContent {
+    flexBox(direction = Direction.COLUMN, gap = 12, paddingAll = 16) {
+        text("Oil Change Guide", style = TextStyle.HEADING)
+        text("Six easy steps. Roughly.", style = TextStyle.BODY)
+        text("Duration: 30 min", style = TextStyle.META, color = TextColor.SECONDARY)
+        button("Start", iconName = IconName.ARROW_RIGHT, onClick = ::showFirstStep)
+    }
+}</code></pre>
+      <div class="note"><b>Always have a root view (L0).</b> The back gesture from the root ends the whole session, so always leave the user a way home. Keep layouts simple, images at or below 600&times;600, and videos short (MP4, https, 400px per side max).</div>
+    </section>
+
+    <section id="android">
+      <h2>Android</h2>
+      <p>Get the real client from <code>Spectra.create(context, bridge)</code>. Registration and the camera permission both deeplink to the Meta AI app and return via an <code>ActivityResult</code> contract that Android insists you register before the host is resumed — so those three calls live in an <code>ActivityBridge</code> you implement against a real Activity. Spectra handles everything else.</p>
+      <pre><code class="language-kotlin">val spectra = Spectra.create(
+    context = applicationContext,
+    bridge = object : ActivityBridge {
+        override fun launchRegistration() = Wearables.startRegistration(activity)
+        override fun launchUnregistration() = Wearables.startUnregistration(activity)
+        override suspend fun requestCameraPermission(): PermissionStatus =
+            permissionLauncher.requestAndAwait(Permission.CAMERA)
+    },
+)</code></pre>
+      <p>Manifest entries (Bluetooth permissions, the Meta callback scheme, the DAM flag) are listed in the <a href="#links">Android integration guide</a>.</p>
+    </section>
+
+    <section id="ios">
+      <h2>iOS</h2>
+      <p>Get the client from <code>Spectra.create()</code>. Honest caveat: Meta's iOS toolkit is a <em>Swift</em> package, and Kotlin/Native speaks Objective-C interop, not Swift. So a production iOS build needs a thin <code>@objc</code> Swift shim that re-exposes the calls you use, wired in via <code>cinterop</code>. Spectra ships that bridge scaffolded and fully documented — the mapping mirrors Android one-to-one. Until you write the shim, <code>Spectra.mock()</code> runs fine on iOS, including in SwiftUI previews.</p>
+    </section>
+
+    <section id="agents">
+      <h2>For AI agents</h2>
+      <p>Spectra is built agentic-first. Point your coding assistant at these and it can write correct integrations without guessing:</p>
+      <table>
+        <tr><th>Artifact</th><th>Use</th></tr>
+        <tr><td><a href="/llms.txt">/llms.txt</a></td><td>Index of every doc section and the upstream Meta references, per the llms.txt spec.</td></tr>
+        <tr><td><a href="/AGENTS.md">/AGENTS.md</a></td><td>Rules of the road: the call sequence, the gotchas, what not to do.</td></tr>
+        <tr><td>KDoc</td><td>Every public type is documented in-source, so hover docs and indexed API search just work.</td></tr>
+      </table>
+      <p>For the underlying SDK, Meta also serves a full API reference at <a href="https://wearables.developer.meta.com/llms.txt?full=true">wearables.developer.meta.com/llms.txt?full=true</a> and ships Claude Code / Cursor / Copilot integrations from its repos.</p>
+    </section>
+
+    <section id="known">
+      <h2>Known issues (upstream)</h2>
+      <p>Inherited from the toolkit's developer preview, so worth knowing before you file a bug against Spectra:</p>
+      <ul class="muted">
+        <li>Installation to the glasses fails below 10% battery, or silently if Wi-Fi is off (Android).</li>
+        <li>You can't reconfigure streaming within one session — stop and start a new one.</li>
+        <li>Android may crash on rapid repeated captures during long (&gt;1 min) streams.</li>
+        <li>App Store submission isn't supported yet; distribute via release channels. iOS uses <code>ExternalAccessory</code>, which trips MFi/privacy-manifest review.</li>
+        <li>Only one third-party app stays registered at a time in Developer Mode.</li>
+      </ul>
+      <p>Full list: <a href="https://wearables.developer.meta.com/docs/develop/dat/knownissues/">Meta — Known issues</a>.</p>
+    </section>
+
+    <section id="links">
+      <h2>Meta references</h2>
+      <p>Spectra wraps the toolkit; these are the primary sources it's built against.</p>
+      <div class="grid2">
+        <div>
+          <a href="https://wearables.developer.meta.com/docs/develop/dat/">Device Access Toolkit overview</a><br/>
+          <a href="https://wearables.developer.meta.com/docs/develop/dat/getting-started-toolkit">Getting started / setup</a><br/>
+          <a href="https://wearables.developer.meta.com/docs/develop/dat/build-overview">Integration overview</a><br/>
+          <a href="https://wearables.developer.meta.com/docs/develop/dat/build-integration-android">Android integration</a><br/>
+          <a href="https://wearables.developer.meta.com/docs/develop/dat/build-integration-ios">iOS integration</a><br/>
+          <a href="https://wearables.developer.meta.com/docs/develop/dat/lifecycle-events">Session lifecycle</a><br/>
+          <a href="https://wearables.developer.meta.com/docs/develop/dat/permissions-requests">Permissions & registration</a>
+        </div>
+        <div>
+          <a href="https://wearables.developer.meta.com/docs/develop/dat/display-overview">Display overview</a><br/>
+          <a href="https://wearables.developer.meta.com/docs/develop/dat/display-android">Display — Android</a><br/>
+          <a href="https://wearables.developer.meta.com/docs/develop/dat/display-ios">Display — iOS</a><br/>
+          <a href="https://wearables.developer.meta.com/docs/develop/dat/display-icons">Display icons</a><br/>
+          <a href="https://wearables.developer.meta.com/docs/develop/dat/ai-assisted">AI-assisted development</a><br/>
+          <a href="https://wearables.developer.meta.com/docs/develop/dat/knownissues">Known issues</a><br/>
+          <a href="https://github.com/facebook/meta-wearables-dat-android">SDK source (Android / iOS)</a>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<footer>
+  <div class="wrap">
+    <div>Spectra v0.1.0 · MIT · an independent wrapper, not affiliated with or endorsed by Meta.</div>
+    <div><a href="/llms.txt">llms.txt</a> · <a href="/AGENTS.md">AGENTS.md</a> · <a href="https://wearables.developer.meta.com/docs/develop/dat/">Meta DAT docs</a></div>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/kotlin.min.js"></script>
+<script>hljs.highlightAll();</script>
+</body>
+</html>
