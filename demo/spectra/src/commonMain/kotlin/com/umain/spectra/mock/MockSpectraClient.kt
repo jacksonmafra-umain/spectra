@@ -1,10 +1,15 @@
 package com.umain.spectra.mock
 
 import com.umain.spectra.SpectraClient
+import com.umain.spectra.core.AudioProfile
+import com.umain.spectra.core.AudioState
 import com.umain.spectra.core.DeviceId
 import com.umain.spectra.core.DeviceSelector
 import com.umain.spectra.core.DeviceSession
+import com.umain.spectra.core.MockDeviceKit
+import com.umain.spectra.core.MockDeviceKitState
 import com.umain.spectra.core.Permission
+import com.umain.spectra.core.SpectraAudio
 import com.umain.spectra.core.PermissionStatus
 import com.umain.spectra.core.RegistrationState
 import com.umain.spectra.core.SpectraError
@@ -13,12 +18,15 @@ import com.umain.spectra.core.WearableDevice
 import com.umain.spectra.core.spectraFailure
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 
 /**
  * The in-memory [SpectraClient]. A complete, self-contained simulation of the
@@ -48,6 +56,75 @@ internal class MockSpectraClient(
 
     private val mockDeviceId = DeviceId("mock-device-0001")
 
+    private val _mockKitState = MutableStateFlow(MockDeviceKitState())
+
+    /**
+     * A self-contained [MockDeviceKit]: flip it on, pair a fake pair of glasses,
+     * and a device appears in [devices] without any real registration or
+     * Bluetooth involved. It's the simulator-friendly twin of the real SDK's
+     * MockDeviceKit, so the debug bottom sheet does something even here.
+     */
+    override val mockDeviceKit: MockDeviceKit = object : MockDeviceKit {
+        override val state: Flow<MockDeviceKitState> = _mockKitState.asStateFlow()
+
+        override fun enable() {
+            _mockKitState.value = _mockKitState.value.copy(enabled = true)
+            refreshDevices()
+        }
+
+        override fun disable() {
+            _mockKitState.value = MockDeviceKitState()
+            refreshDevices()
+        }
+
+        override fun pairGlasses() {
+            if (!_mockKitState.value.enabled) return
+            _mockKitState.value =
+                _mockKitState.value.copy(pairedCount = _mockKitState.value.pairedCount + 1)
+            refreshDevices()
+        }
+    }
+
+    private val _audioState = MutableStateFlow(AudioState())
+    private var micJob: Job? = null
+
+    /** A self-contained audio stand-in: TTS "plays", and the mic emits a wandering level. */
+    override val audio: SpectraAudio = object : SpectraAudio {
+        override val state: Flow<AudioState> = _audioState.asStateFlow()
+
+        override suspend fun playToGlasses(text: String) {
+            _audioState.value = AudioState(
+                profile = AudioProfile.A2DP_PLAYBACK, isPlaying = true, routedToGlasses = true,
+            )
+            delay(2_000)
+            _audioState.value = AudioState(profile = AudioProfile.A2DP_PLAYBACK, routedToGlasses = true)
+        }
+
+        override suspend fun stopPlayback() {
+            _audioState.value = AudioState()
+        }
+
+        override suspend fun startMicCapture() {
+            micJob?.cancel()
+            micJob = scope.launch {
+                var t = 0.0
+                while (isActive) {
+                    val level = (0.5 + 0.5 * kotlin.math.sin(t)).toFloat() * 0.8f
+                    _audioState.value = AudioState(
+                        profile = AudioProfile.HFP_MIC, micLevel = level, routedToGlasses = true,
+                    )
+                    t += 0.4
+                    delay(80)
+                }
+            }
+        }
+
+        override suspend fun stopMicCapture() {
+            micJob?.cancel(); micJob = null
+            _audioState.value = AudioState()
+        }
+    }
+
     override suspend fun initialize(): SpectraResult<Unit> {
         initialized = true
         return Result.success(Unit)
@@ -63,7 +140,7 @@ internal class MockSpectraClient(
             return spectraFailure(SpectraError.Backend("Mock registration failed on request."))
         }
         _registrationState.value = RegistrationState.Registered
-        revealDeviceIfReady()
+        refreshDevices()
         return Result.success(Unit)
     }
 
@@ -71,7 +148,7 @@ internal class MockSpectraClient(
         if (!initialized) return spectraFailure(SpectraError.NotInitialized)
         _registrationState.value = RegistrationState.NotRegistered
         cameraStatus = PermissionStatus.NOT_DETERMINED
-        _devices.value = emptyList()
+        refreshDevices()
         return Result.success(Unit)
     }
 
@@ -91,7 +168,6 @@ internal class MockSpectraClient(
             if (config.autoGrantPermissions) PermissionStatus.GRANTED else PermissionStatus.DENIED
         if (permission == Permission.CAMERA) {
             cameraStatus = result
-            revealDeviceIfReady()
         }
         return result
     }
@@ -114,24 +190,31 @@ internal class MockSpectraClient(
         return Result.success(MockDeviceSession(targetId, config, scope))
     }
 
+    override suspend fun openGlassesAppUpdate(): SpectraResult<Unit> {
+        // No real glasses to update in the mock.
+        return Result.success(Unit)
+    }
+
     override suspend fun shutdown() {
         scope.cancel()
         initialized = false
         _registrationState.value = RegistrationState.NotRegistered
-        _devices.value = emptyList()
         cameraStatus = PermissionStatus.NOT_DETERMINED
+        _mockKitState.value = MockDeviceKitState()
+        _devices.value = emptyList()
     }
 
     /**
-     * A device only shows up once you're registered *and* a permission is
-     * granted — the same gotcha the integration guides warn about in bold. We
-     * reproduce it on purpose, because a mock that hides the footguns just sells
-     * them to you later at full price.
+     * A device becomes active once you've registered (your glasses are
+     * connected) *or* the [mockDeviceKit] has paired a fake one. Camera
+     * permission gates the stream's *contents*, not the device's existence —
+     * which is exactly how the real auto-selector behaves, and why the official
+     * sample can light up "Start streaming" before you've granted anything.
      */
-    private fun revealDeviceIfReady() {
-        val ready = _registrationState.value == RegistrationState.Registered &&
-            cameraStatus == PermissionStatus.GRANTED
-        _devices.value = if (ready) {
+    private fun refreshDevices() {
+        val viaRegistration = _registrationState.value == RegistrationState.Registered
+        val viaMockKit = _mockKitState.value.enabled && _mockKitState.value.pairedCount > 0
+        _devices.value = if (viaRegistration || viaMockKit) {
             listOf(
                 WearableDevice(
                     id = mockDeviceId,
