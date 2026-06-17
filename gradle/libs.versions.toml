@@ -1,0 +1,39 @@
+[versions]
+# Spectra's own version. We start at 0.1.0 because pretending to be 1.0 this
+# early would be the software equivalent of a learner driver with a "BABY ON
+# BOARD" sticker and no licence.
+spectra = "0.1.0"
+
+kotlin = "2.1.0"
+agp = "8.5.2"
+composeMultiplatform = "1.7.1"
+coroutines = "1.9.0"
+androidxActivity = "1.9.3"
+androidxLifecycle = "2.8.4"
+androidMinSdk = "29"   # Android 10 — same floor as the Meta AI app. Not negotiable.
+androidCompileSdk = "35"
+androidTargetSdk = "35"
+
+# The actual Meta SDK. You bring the GitHub token; we bring everything else.
+mwdat = "0.7.0"
+
+[libraries]
+kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutines" }
+kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
+kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines" }
+
+androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "androidxActivity" }
+androidx-lifecycle-runtime = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "androidxLifecycle" }
+
+# Meta Wearables Device Access Toolkit (Android). Resolved from GitHub Packages.
+mwdat-core = { group = "com.meta.wearable", name = "mwdat-core", version.ref = "mwdat" }
+mwdat-camera = { group = "com.meta.wearable", name = "mwdat-camera", version.ref = "mwdat" }
+mwdat-display = { group = "com.meta.wearable", name = "mwdat-display", version.ref = "mwdat" }
+mwdat-mockdevice = { group = "com.meta.wearable", name = "mwdat-mockdevice", version.ref = "mwdat" }
+
+[plugins]
+kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+androidLibrary = { id = "com.android.library", version.ref = "agp" }
+androidApplication = { id = "com.android.application", version.ref = "agp" }
+composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }
+composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
