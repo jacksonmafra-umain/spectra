@@ -15,6 +15,12 @@ kotlin {
         iosTarget.binaries.framework {
             baseName = "Shared"
             isStatic = true
+            // Spectra's iOS code pulls in platform deps, so Kotlin/Native can no
+            // longer infer a bundle id for the framework — set it explicitly.
+            binaryOption("bundleId", "com.umain.spectra.shared")
+            // Export :spectra so its public API (SpectraNativeBridge, Spectra,
+            // SpectraClient...) shows up in the framework's headers for Swift.
+            export(projects.spectra)
         }
     }
     
