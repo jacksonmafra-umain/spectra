@@ -43,4 +43,5 @@ dependencyResolutionManagement {
 }
 
 include(":spectra")
-include(":demo")
+// The runnable Android + iOS demo lives in template/ (its own Gradle build).
+// The old root-level :demo module is superseded by it and no longer included.
