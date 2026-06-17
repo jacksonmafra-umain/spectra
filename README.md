@@ -9,15 +9,45 @@ Spectra is a Kotlin Multiplatform wrapper around [Meta's Wearables Device Access
 ## What's in here
 
 ```
-demo/    Spectra Playground — a Compose Multiplatform app (Android + iOS).
-         The Spectra library source lives in demo/shared (com.umain.spectra.*):
-           shared/      the library + the Playground UI
-           androidApp/  Android entry point (real mwdat backend)
-           iosApp/      iOS Xcode project (mock for now; Swift bridge pending)
-docs/    Spectra Docs — a static, Vercel-ready site (index.html + llms.txt + AGENTS.md).
+demo/
+  spectra/      THE LIBRARY (KMP, publishable). Agnostic of the demo:
+                commonMain (core/camera/display/mock + Spectra/SpectraClient),
+                androidMain (real mwdat backend), iOS targets.
+  shared/       Playground UI (Compose). Depends on :spectra — like any app would.
+  androidApp/   Android entry point.
+  iosApp/       iOS Xcode project (mock for now; Swift bridge pending).
+docs/           Spectra Docs — a static, Vercel-ready site (index.html + llms.txt + AGENTS.md).
 ```
 
-The demo has a runtime **Backend** toggle: **Mock** (synthetic frames, no hardware, runs anywhere) or **Glasses (real)** (talks to the Meta AI app and your glasses). Android ships the real backend wired; iOS runs on the mock until the Swift bridge is added.
+The library (`:spectra`) is standalone: it has no dependency on the demo, so any project can use it. The demo is just the first consumer. It has a runtime **Backend** toggle — **Mock** (synthetic frames, no hardware) or **Glasses (real)** (talks to the Meta AI app and your glasses); Android ships the real backend wired, iOS runs on the mock until the Swift bridge is added.
+
+## Use Spectra in your own project
+
+Publish the library to Maven Local, then depend on it from any KMP project — no demo required:
+
+```bash
+cd demo && ./gradlew :spectra:publishToMavenLocal   # -> com.umain.spectra:spectra:0.1.0
+```
+
+```kotlin
+// settings.gradle.kts of your project — add mavenLocal() and the mwdat repo
+dependencyResolutionManagement {
+    repositories {
+        mavenLocal()
+        google(); mavenCentral()
+        maven {
+            url = uri("https://maven.pkg.github.com/facebook/meta-wearables-dat-android")
+            credentials { username = ""; password = providers.gradleProperty("github_token").orNull ?: System.getenv("GH_TOKEN") ?: "" }
+            content { includeGroup("com.meta.wearable") }
+        }
+    }
+}
+
+// shared/build.gradle.kts of your project
+kotlin { sourceSets { commonMain.dependencies { implementation("com.umain.spectra:spectra:0.1.0") } } }
+```
+
+Then `Spectra.mock()` works anywhere; `Spectra.create(context, bridge)` gives the real Android client (needs the GitHub token + the manifest credentials).
 
 ## Run the demo
 

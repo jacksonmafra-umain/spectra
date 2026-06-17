@@ -43,5 +43,6 @@ dependencyResolutionManagement {
     }
 }
 
-include(":androidApp")
+include(":spectra")
 include(":shared")
+include(":androidApp")

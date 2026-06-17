@@ -37,13 +37,12 @@ kotlin {
     sourceSets {
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
-            // Real Meta SDK — the Android backend delegates to these. Resolves
-            // only with a GitHub Packages token (see settings.gradle.kts).
-            implementation(libs.mwdat.core)
-            implementation(libs.mwdat.camera)
-            implementation(libs.mwdat.display)
         }
         commonMain.dependencies {
+            // The Spectra library lives in its own module now — the demo just
+            // consumes it, like any other app would. `api` so the Android entry
+            // point can see ActivityBridge / Spectra.create through :shared.
+            api(projects.spectra)
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.compose.runtime)
             implementation(libs.compose.foundation)
