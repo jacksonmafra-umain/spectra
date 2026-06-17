@@ -3,7 +3,17 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidLibrary)
+    // Turns the module into something you can `publishToMavenLocal` and then
+    // consume from another project via mavenLocal(). The Kotlin Multiplatform
+    // plugin wires up the actual publications for us once this is applied.
+    `maven-publish`
 }
+
+// Coordinates for the published artifact: com.umain.spectra:spectra:<version>.
+// Version is single-sourced from the catalog so there's exactly one place to
+// bump it, and no chance of the docs and the build disagreeing.
+group = "com.umain.spectra"
+version = libs.versions.spectra.get()
 
 kotlin {
     androidTarget {
@@ -31,11 +41,11 @@ kotlin {
         }
         androidMain.dependencies {
             implementation(libs.kotlinx.coroutines.android)
-            // The real deal. Only resolves once you've fed Gradle a GitHub token.
-            // See settings.gradle.kts for the lecture.
-            implementation(libs.mwdat.core)
-            implementation(libs.mwdat.camera)
-            implementation(libs.mwdat.display)
+            // NOTE: the real Meta SDK (mwdat-core/-camera/-display) is intentionally
+            // NOT a dependency here. The Android backend ships as a documented
+            // skeleton so the whole library builds and publishes with no GitHub
+            // token. To wire the real thing, follow spectra/android-reference/ and
+            // re-add the mwdat artifacts (see that folder's README).
         }
     }
 }

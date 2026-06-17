@@ -13,92 +13,69 @@ import com.umain.spectra.core.SpectraResult
 import com.umain.spectra.core.WearableDevice
 import com.umain.spectra.core.spectraFailure
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
-
-// The real toolkit. Resolves only with a GitHub token; see settings.gradle.kts.
-import com.meta.wearable.dat.core.Wearables
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 /**
- * Android [SpectraClient] backed by the real Meta Wearables Device Access
- * Toolkit (`mwdat-core` / `-camera` / `-display`, version 0.7).
+ * Android [SpectraClient] — currently a documented skeleton.
  *
- * This is the thin layer. It delegates to [Wearables] for everything that
- * doesn't need an Activity, and to your [ActivityBridge] for the two things that
- * do. If a Meta constant or method name drifts in a future SDK release, the
- * blast radius is this file and [Mappers] — by design.
+ * Why a skeleton and not the real thing: wiring Meta's `mwdat-*` artifacts
+ * requires a GitHub Packages token to even compile, and the exact 0.7 API has
+ * sharp edges that can't be verified without the SDK on the build machine
+ * (devices arrive as bare `DeviceIdentifier`s with metadata in a separate flow,
+ * `PhotoData` is `HEIC`/`Bitmap` rather than raw bytes, the display DSL uses a
+ * `ContentScope` receiver, and so on). So the library ships building-and-green
+ * with this skeleton, and the real delegation lives — corrected against the
+ * actual 0.7 reference — in `spectra/android-reference/` for you to drop in.
  *
- * Note: this code targets the documented 0.7 surface. It compiles against the
- * published artifacts, which means it does not compile until you've supplied a
- * GitHub Packages token. That's Meta's distribution choice, not ours, and the
- * mock client exists precisely so you're not blocked on it.
+ * Until you wire it, use [com.umain.spectra.Spectra.mock], which runs the whole
+ * flow on Android with no token and no hardware.
+ *
+ * @property appContext kept for when the real backend calls `Wearables.initialize(context)`.
+ * @property bridge kept for the Activity-bound registration/permission flows.
  */
 internal class AndroidSpectraClient(
-    private val appContext: Context,
-    private val bridge: ActivityBridge,
+    @Suppress("unused") private val appContext: Context,
+    @Suppress("unused") private val bridge: ActivityBridge,
 ) : SpectraClient {
 
-    override val registrationState: Flow<RegistrationState> =
-        Wearables.registrationState.map { metaState ->
-            // Meta's registration state names are mapped here. Adjust if 0.x
-            // renames them; everything downstream speaks Spectra's dialect.
-            when (metaState.toString().uppercase()) {
-                "REGISTERED" -> RegistrationState.Registered
-                "REGISTERING" -> RegistrationState.Registering
-                "FAILED" -> RegistrationState.Failed("Registration failed. Check app id and client token.")
-                else -> RegistrationState.NotRegistered
-            }
-        }
+    private val _registrationState =
+        MutableStateFlow<RegistrationState>(RegistrationState.NotRegistered)
+    override val registrationState: Flow<RegistrationState> = _registrationState.asStateFlow()
 
-    override val devices: Flow<List<WearableDevice>> =
-        Wearables.devices.map { list ->
-            list.map { d -> Mappers.device(d.id.toString(), d.name, d.model, d.available) }
-        }
+    private val _devices = MutableStateFlow<List<WearableDevice>>(emptyList())
+    override val devices: Flow<List<WearableDevice>> = _devices.asStateFlow()
 
-    override suspend fun initialize(): SpectraResult<Unit> = runCatchingSpectra {
-        Wearables.initialize(appContext)
-    }
+    override suspend fun initialize(): SpectraResult<Unit> =
+        notWired("Wearables.initialize(context)")
 
-    override suspend fun startRegistration(): SpectraResult<Unit> = runCatchingSpectra {
-        bridge.launchRegistration()
-    }
+    override suspend fun startRegistration(): SpectraResult<Unit> =
+        notWired("Wearables.startRegistration(activity) via ActivityBridge")
 
-    override suspend fun startUnregistration(): SpectraResult<Unit> = runCatchingSpectra {
-        bridge.launchUnregistration()
-    }
+    override suspend fun startUnregistration(): SpectraResult<Unit> =
+        notWired("Wearables.startUnregistration(activity) via ActivityBridge")
 
     override suspend fun checkPermission(permission: Permission): PermissionStatus =
-        Mappers.permissionStatus(Wearables.checkPermissionStatus(Mappers.permission(permission)))
+        PermissionStatus.UNAVAILABLE
 
     override suspend fun requestPermission(permission: Permission): PermissionStatus =
-        when (permission) {
-            Permission.CAMERA -> bridge.requestCameraPermission()
-            // Microphone is platform HFP, not a Meta AI prompt. Ask Android, not us.
-            Permission.MICROPHONE -> checkPermission(permission)
-        }
+        PermissionStatus.UNAVAILABLE
 
-    override suspend fun createSession(selector: DeviceSelector): SpectraResult<DeviceSession> {
-        val metaSelector = Mappers.selector(selector)
-        return Wearables.createSession(metaSelector).fold(
-            onSuccess = { metaSession -> Result.success(AndroidDeviceSession(metaSession)) },
-            onFailure = { error -> spectraFailure(SpectraError.Backend(error.message ?: "createSession failed", error)) },
-        )
-    }
+    override suspend fun createSession(selector: DeviceSelector): SpectraResult<DeviceSession> =
+        notWired("Wearables.createSession(deviceSelector)")
 
     override suspend fun shutdown() {
-        // The toolkit has no global teardown; sessions own their lifecycles.
-        // Stop yours and let the rest fall out of scope like a polite guest.
+        // Nothing allocated yet — nothing to release.
     }
-}
 
-/**
- * Run an SDK call, converting any thrown exception into a [SpectraError.Backend]
- * failure. DRY: every delegating method would otherwise repeat this try/catch,
- * and copy-pasted error handling is how one bug becomes twelve.
- */
-internal inline fun runCatchingSpectra(block: () -> Unit): SpectraResult<Unit> =
-    try {
-        block()
-        Result.success(Unit)
-    } catch (t: Throwable) {
-        spectraFailure(SpectraError.Backend(t.message ?: "Meta SDK call failed", t))
-    }
+    /**
+     * The single honest failure for every un-wired call, naming the exact mwdat
+     * symbol the reference template binds to. The message doubles as a to-do list.
+     */
+    private fun <T> notWired(symbol: String): SpectraResult<T> = spectraFailure(
+        SpectraError.Backend(
+            "Android backend not wired: bind `$symbol` from spectra/android-reference/, " +
+                "then re-add the mwdat-* dependencies. Use Spectra.mock() until then.",
+        ),
+    )
+}

@@ -53,9 +53,10 @@ spectra/                         the library
     camera/                       stream, configuration, frames, photos
     display/                      FlexBox component model + content DSL + display contract
     mock/                         in-memory backend that simulates glasses end to end
-  src/androidMain/                real backend delegating to mwdat-core/-camera/-display
+  src/androidMain/                skeleton client (builds token-free)
   src/iosMain/                    documented Swift-bridge skeleton
   src/commonTest/                 mock-driven tests doubling as executable docs
+  android-reference/              real mwdat delegation (template, not compiled)
 
 demo/                            Spectra Playground (Compose Multiplatform)
   src/commonMain/                shared UI + state, runs on Spectra.mock()
@@ -65,19 +66,64 @@ demo/                            Spectra Playground (Compose Multiplatform)
 docs/                            static site for Vercel (index.html, llms.txt, AGENTS.md)
 ```
 
-## Building
+## Build & test
 
-Requires JDK 17, Android SDK, and (for the iOS targets) Xcode. The Gradle wrapper jar isn't committed; generate it once with a local Gradle: `gradle wrapper --gradle-version 8.10.2`.
+Requires JDK 17, the Android SDK, and (for the iOS targets) Xcode. Use the Gradle **wrapper** — the project is pinned to Gradle 8.10.2, which is what AGP 8.5.2 / Kotlin 2.1.0 / Compose 1.7.1 expect. Gradle 9.x will not work (it removed an internal API that Kotlin Multiplatform still calls). If the wrapper is missing, bootstrap it once with a Gradle 8.x on your PATH: `gradle wrapper --gradle-version 8.10.2`.
 
 ```bash
-./gradlew :spectra:compileKotlinMetadata   # common code + mock, no token needed
-./gradlew :spectra:allTests                 # run the mock-driven tests
-./gradlew :demo:assembleDebug               # the Android Playground apk
+./gradlew :spectra:allTests               # run the mock-driven tests (no token needed)
+./gradlew :spectra:compileKotlinMetadata  # compile common code + mock
+./gradlew :demo:assembleDebug             # build the Android Playground apk
+./gradlew check                           # everything: compile + tests + lint
 ```
 
-The **real Android backend** resolves from GitHub Packages, which needs a personal access token with `read:packages`. Put `github_token=ghp_...` in `local.properties` (gitignored) or export `GITHUB_TOKEN`. The mock and all common code build and test without it.
+**The entire library builds and publishes with no GitHub token.** Android and iOS both ship as documented skeletons: `Spectra.create(...)` returns a clearly-marked not-yet-wired client, and `Spectra.mock()` runs the full flow on every platform. The Android demo uses the mock, so it builds and runs token-free too:
 
-For iOS, finish the `@objc` Swift shim described in `spectra/src/iosMain/.../IosSpectraClient.kt` and wire it via `cinterop`. Until then, `Spectra.mock()` runs on iOS, including in previews.
+```bash
+./gradlew :demo:installDebug              # then launch "Spectra Playground"
+```
+
+To wire the **real Android backend**, follow `spectra/android-reference/` — it contains the delegation to Meta's `mwdat-*` artifacts, corrected against the 0.7 API. You re-add the `mwdat-*` dependencies and supply a GitHub Packages token (`github_token` in `local.properties`, or the `GH_TOKEN` environment variable, read by `settings.gradle.kts`). For **iOS**, finish the `@objc` Swift shim described in `spectra/src/iosMain/.../IosSpectraClient.kt` and wire it via `cinterop`.
+
+## Publish locally
+
+The library is set up for Maven Local, so you can consume Spectra from another project on your machine without a remote repository. Publish it under `com.umain.spectra:spectra:0.1.0`:
+
+```bash
+./gradlew :spectra:publishToMavenLocal
+```
+
+This publishes the multiplatform metadata plus the Android (`release`) and iOS variants to `~/.m2/repository`. Verify with:
+
+```bash
+ls ~/.m2/repository/com/umain/spectra
+```
+
+Then, in the consuming project, add `mavenLocal()` (first, so it wins) and depend on Spectra in your shared `commonMain`:
+
+```kotlin
+// settings.gradle.kts of the OTHER project
+dependencyResolutionManagement {
+    repositories {
+        mavenLocal()      // resolves the locally published Spectra
+        google()
+        mavenCentral()
+    }
+}
+```
+
+```kotlin
+// shared/build.gradle.kts of the OTHER project
+kotlin {
+    sourceSets {
+        commonMain.dependencies {
+            implementation("com.umain.spectra:spectra:0.1.0")
+        }
+    }
+}
+```
+
+Bump the version once, in `gradle/libs.versions.toml` (`spectra = "..."`); the build coordinates and these docs read from there. Maven Local does not delete old versions, so clear stale ones from `~/.m2/repository/com/umain/spectra` if they accumulate.
 
 ## Design notes
 

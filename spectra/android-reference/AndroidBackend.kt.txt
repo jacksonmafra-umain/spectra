@@ -1,0 +1,432 @@
+/*
+ * Spectra — Android real-SDK backend (REFERENCE TEMPLATE, NOT COMPILED).
+ *
+ * Corrected against the Meta Wearables Device Access Toolkit 0.7 Android API.
+ * Copy these classes into spectra/src/androidMain/kotlin/com/umain/spectra/android/
+ * (split into one file per class) after re-adding the mwdat-* dependencies and a
+ * GitHub token. See README.md in this folder. Verify against your installed SDK
+ * version — Meta is at developer preview and signatures may drift.
+ *
+ * The KDoc tone is kept; the behaviour is meant to be exact.
+ */
+
+package com.umain.spectra.android
+
+import android.content.Context
+import com.umain.spectra.ActivityBridge
+import com.umain.spectra.SpectraClient
+import com.umain.spectra.camera.CameraStream
+import com.umain.spectra.camera.Photo
+import com.umain.spectra.camera.PhotoFormat
+import com.umain.spectra.camera.StreamConfiguration
+import com.umain.spectra.camera.StreamState
+import com.umain.spectra.camera.VideoFrame
+import com.umain.spectra.camera.VideoQuality
+import com.umain.spectra.core.DeviceId
+import com.umain.spectra.core.DeviceSelector
+import com.umain.spectra.core.DeviceSession
+import com.umain.spectra.core.Permission
+import com.umain.spectra.core.PermissionStatus
+import com.umain.spectra.core.RegistrationState
+import com.umain.spectra.core.SessionState
+import com.umain.spectra.core.SpectraError
+import com.umain.spectra.core.SpectraResult
+import com.umain.spectra.core.WearableDevice
+import com.umain.spectra.core.spectraFailure
+import com.umain.spectra.display.Alignment
+import com.umain.spectra.display.ButtonStyle
+import com.umain.spectra.display.CornerRadius
+import com.umain.spectra.display.Direction
+import com.umain.spectra.display.Display
+import com.umain.spectra.display.DisplayConfiguration
+import com.umain.spectra.display.DisplayContent
+import com.umain.spectra.display.DisplayNode
+import com.umain.spectra.display.DisplayScope
+import com.umain.spectra.display.DisplayState
+import com.umain.spectra.display.IconName
+import com.umain.spectra.display.IconStyle
+import com.umain.spectra.display.ImageSize
+import com.umain.spectra.display.TextColor
+import com.umain.spectra.display.TextStyle
+import com.umain.spectra.display.displayContent
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import java.nio.ByteBuffer
+
+// --- Meta SDK (mwdat 0.7) -----------------------------------------------------
+import com.meta.wearable.dat.core.Wearables
+import com.meta.wearable.dat.core.session.DeviceSession as MetaSession
+import com.meta.wearable.dat.core.session.DeviceSessionState
+import com.meta.wearable.dat.core.session.addStream
+import com.meta.wearable.dat.core.session.addDisplay
+import com.meta.wearable.dat.core.session.removeDisplay
+import com.meta.wearable.dat.core.selectors.AutoDeviceSelector
+import com.meta.wearable.dat.core.selectors.SpecificDeviceSelector
+import com.meta.wearable.dat.core.types.DeviceIdentifier
+import com.meta.wearable.dat.core.types.Permission as MetaPermission
+import com.meta.wearable.dat.core.types.PermissionStatus as MetaPermissionStatus
+import com.meta.wearable.dat.camera.Stream as MetaStream
+import com.meta.wearable.dat.camera.types.PhotoData
+import com.meta.wearable.dat.camera.types.StreamConfiguration as MetaStreamConfiguration
+import com.meta.wearable.dat.camera.types.StreamState as MetaStreamState
+import com.meta.wearable.dat.camera.types.VideoQuality as MetaVideoQuality
+import com.meta.wearable.dat.display.Display as MetaDisplay
+import com.meta.wearable.dat.display.views.ContentScope
+import com.meta.wearable.dat.display.views.FlexBoxScope
+import com.meta.wearable.dat.display.views.VideoPlayer as MetaVideoPlayer
+import com.meta.wearable.dat.display.views.VideoSource as MetaVideoSource
+import com.meta.wearable.dat.display.views.VideoCodec as MetaVideoCodec
+import com.meta.wearable.dat.display.views.Direction as MetaDirection
+import com.meta.wearable.dat.display.views.Alignment as MetaAlignment
+import com.meta.wearable.dat.display.views.TextStyle as MetaTextStyle
+import com.meta.wearable.dat.display.views.TextColor as MetaTextColor
+import com.meta.wearable.dat.display.views.ImageSize as MetaImageSize
+import com.meta.wearable.dat.display.views.CornerRadius as MetaCornerRadius
+import com.meta.wearable.dat.display.views.ButtonStyle as MetaButtonStyle
+import com.meta.wearable.dat.display.views.IconStyle as MetaIconStyle
+import com.meta.wearable.dat.display.views.IconName as MetaIconName
+
+// =============================================================================
+// Client
+// =============================================================================
+
+internal class AndroidSpectraClient(
+    private val appContext: Context,
+    private val bridge: ActivityBridge,
+) : SpectraClient {
+
+    override val registrationState: Flow<RegistrationState> =
+        Wearables.registrationState.map { meta ->
+            // RegistrationState constants aren't pinned in the public reference,
+            // so match by name and stay forward-compatible.
+            when (meta.toString().uppercase()) {
+                "REGISTERED" -> RegistrationState.Registered
+                "REGISTERING" -> RegistrationState.Registering
+                "FAILED" -> RegistrationState.Failed("Registration failed. Check app id and client token.")
+                else -> RegistrationState.NotRegistered
+            }
+        }
+
+    // devices is a Set<DeviceIdentifier>; we enrich it with metadata where we can.
+    override val devices: Flow<List<WearableDevice>> =
+        Wearables.devices.map { ids ->
+            ids.map { id ->
+                val meta = Wearables.devicesMetadata[id]?.value
+                WearableDevice(
+                    id = DeviceId(id.toString()),
+                    name = meta?.name ?: id.toString(),
+                    model = meta?.deviceType?.toString() ?: "unknown",
+                    isAvailable = meta?.linkState?.toString()?.uppercase()?.contains("CONNECTED") == true,
+                )
+            }
+        }
+
+    override suspend fun initialize(): SpectraResult<Unit> =
+        Wearables.initialize(appContext).fold(
+            onSuccess = { Result.success(Unit) },
+            onFailure = { error, cause -> spectraFailure(SpectraError.Backend(error.description, cause)) },
+        )
+
+    override suspend fun startRegistration(): SpectraResult<Unit> =
+        runCatchingSpectra { bridge.launchRegistration() }
+
+    override suspend fun startUnregistration(): SpectraResult<Unit> =
+        runCatchingSpectra { bridge.launchUnregistration() }
+
+    override suspend fun checkPermission(permission: Permission): PermissionStatus =
+        Wearables.checkPermissionStatus(metaPermission(permission)).fold(
+            onSuccess = { status -> permissionStatus(status) },
+            onFailure = { _, _ -> PermissionStatus.UNAVAILABLE },
+        )
+
+    override suspend fun requestPermission(permission: Permission): PermissionStatus =
+        when (permission) {
+            Permission.CAMERA -> bridge.requestCameraPermission()
+            Permission.MICROPHONE -> checkPermission(permission) // platform HFP
+        }
+
+    override suspend fun createSession(selector: DeviceSelector): SpectraResult<DeviceSession> =
+        Wearables.createSession(metaSelector(selector)).fold(
+            onSuccess = { session -> Result.success(AndroidDeviceSession(session)) },
+            onFailure = { error, cause -> spectraFailure(SpectraError.Backend(error.description, cause)) },
+        )
+
+    override suspend fun shutdown() {
+        // Sessions own their lifecycles; nothing global to tear down.
+    }
+
+    private fun metaPermission(p: Permission): MetaPermission = when (p) {
+        Permission.CAMERA -> MetaPermission.CAMERA
+        Permission.MICROPHONE -> MetaPermission.MICROPHONE
+    }
+
+    private fun permissionStatus(s: MetaPermissionStatus): PermissionStatus = when (s) {
+        is MetaPermissionStatus.Granted -> PermissionStatus.GRANTED
+        is MetaPermissionStatus.Denied -> PermissionStatus.DENIED
+        else -> PermissionStatus.NOT_DETERMINED
+    }
+
+    // Auto unless you can resolve the exact DeviceIdentifier for a Specific request.
+    private fun metaSelector(selector: DeviceSelector) = when (selector) {
+        is DeviceSelector.Auto -> AutoDeviceSelector()
+        is DeviceSelector.Specific -> {
+            val match = Wearables.devices.value.firstOrNull { it.toString() == selector.deviceId.value }
+            if (match != null) SpecificDeviceSelector(match) else AutoDeviceSelector()
+        }
+    }
+}
+
+internal inline fun runCatchingSpectra(block: () -> Unit): SpectraResult<Unit> =
+    try {
+        block()
+        Result.success(Unit)
+    } catch (t: Throwable) {
+        spectraFailure(SpectraError.Backend(t.message ?: "Meta SDK call failed", t))
+    }
+
+// =============================================================================
+// Session
+// =============================================================================
+
+internal class AndroidDeviceSession(private val meta: MetaSession) : DeviceSession {
+
+    // The SDK session exposes no id; we don't need one for delegation.
+    override val deviceId: DeviceId = DeviceId("active")
+
+    override val state: Flow<SessionState> = meta.state.map { s ->
+        when (s) {
+            DeviceSessionState.RUNNING_NOT_PRESENT_PLACEHOLDER -> SessionState.RUNNING // see note
+            DeviceSessionState.STARTED -> SessionState.RUNNING
+            DeviceSessionState.STARTING -> SessionState.STARTING
+            DeviceSessionState.PAUSED -> SessionState.PAUSED
+            DeviceSessionState.IDLE,
+            DeviceSessionState.STOPPING,
+            DeviceSessionState.STOPPED -> SessionState.STOPPED
+        }
+    }
+
+    override suspend fun start(): SpectraResult<Unit> = runCatchingSpectra { meta.start() }
+    override suspend fun stop(): SpectraResult<Unit> = runCatchingSpectra { meta.stop() }
+
+    override suspend fun openCameraStream(configuration: StreamConfiguration): SpectraResult<CameraStream> =
+        meta.addStream(metaStreamConfig(configuration)).fold(
+            onSuccess = { stream -> Result.success(AndroidCameraStream(stream)) },
+            onFailure = { error, cause -> spectraFailure(SpectraError.Backend(error.description, cause)) },
+        )
+
+    override suspend fun attachDisplay(configuration: DisplayConfiguration): SpectraResult<Display> =
+        meta.addDisplay().fold(
+            onSuccess = { display -> Result.success(AndroidDisplay(display)) },
+            onFailure = { error, cause -> spectraFailure(SpectraError.Backend(error.description, cause)) },
+        )
+
+    override suspend fun removeDisplay() {
+        meta.removeDisplay()
+    }
+
+    private fun metaStreamConfig(c: StreamConfiguration) =
+        MetaStreamConfiguration(videoQuality = metaQuality(c.quality), frameRate = c.frameRate.fps)
+
+    private fun metaQuality(q: VideoQuality) = when (q) {
+        VideoQuality.LOW -> MetaVideoQuality.LOW
+        VideoQuality.MEDIUM -> MetaVideoQuality.MEDIUM
+        VideoQuality.HIGH -> MetaVideoQuality.HIGH
+    }
+}
+
+/*
+ * NOTE on DeviceSessionState: the 0.7 enum is IDLE, STARTING, STARTED, PAUSED,
+ * STOPPING, STOPPED — there is no RUNNING. Map STARTED -> RUNNING (delete the
+ * placeholder branch above; it's only there to flag this). Spectra's SessionState
+ * deliberately collapses IDLE/STOPPING/STOPPED into STOPPED.
+ */
+
+// =============================================================================
+// Camera stream
+// =============================================================================
+
+internal class AndroidCameraStream(private val meta: MetaStream) : CameraStream {
+
+    override val state: Flow<StreamState> = meta.state.map(::streamState)
+
+    override val frames: Flow<VideoFrame> = meta.videoStream.map { f ->
+        VideoFrame(
+            width = f.width,
+            height = f.height,
+            bytes = f.buffer.toByteArray(),
+            timestampMillis = f.presentationTimeUs / 1000,
+        )
+    }
+
+    override suspend fun start(): SpectraResult<Unit> =
+        meta.start().fold(
+            onSuccess = { Result.success(Unit) },
+            onFailure = { error, cause -> spectraFailure(SpectraError.Backend(error.description, cause)) },
+        )
+
+    override suspend fun stop(): SpectraResult<Unit> = runCatchingSpectra { meta.stop() }
+
+    override suspend fun capturePhoto(format: PhotoFormat): SpectraResult<Photo> =
+        meta.capturePhoto().fold(
+            onSuccess = { data -> Result.success(toPhoto(data)) },
+            onFailure = { error, cause -> spectraFailure(SpectraError.Backend(error.description, cause)) },
+        )
+
+    override suspend fun close() = meta.close()
+
+    private fun streamState(s: MetaStreamState): StreamState = when (s) {
+        MetaStreamState.STARTING -> StreamState.STARTING
+        MetaStreamState.STARTED -> StreamState.STARTED
+        MetaStreamState.STREAMING -> StreamState.STREAMING
+        MetaStreamState.STOPPING -> StreamState.STOPPING
+        MetaStreamState.STOPPED -> StreamState.STOPPED
+        MetaStreamState.CLOSED -> StreamState.CLOSED
+    }
+
+    // PhotoData is HEIC(ByteBuffer) or Bitmap(android.graphics.Bitmap). It carries
+    // no width/height, so we report 0 unless you decode. Format is HEIC-ish; we
+    // label JPEG to fit Spectra's enum — adjust if you add HEIC to PhotoFormat.
+    private fun toPhoto(data: PhotoData): Photo = when (data) {
+        is PhotoData.HEIC -> Photo(data.data.toByteArray(), PhotoFormat.JPEG, 0, 0)
+        is PhotoData.Bitmap -> {
+            val bmp = data.bitmap
+            Photo(ByteArray(0), PhotoFormat.JPEG, bmp.width, bmp.height) // compress to taste
+        }
+    }
+}
+
+private fun ByteBuffer.toByteArray(): ByteArray {
+    val dup = this.duplicate()
+    val out = ByteArray(dup.remaining())
+    dup.get(out)
+    return out
+}
+
+// =============================================================================
+// Display
+// =============================================================================
+
+internal class AndroidDisplay(private val meta: MetaDisplay) : Display {
+
+    override val state: Flow<DisplayState> = meta.state.map { s ->
+        when (s.toString().uppercase()) {
+            "STARTING" -> DisplayState.STARTING
+            "STARTED" -> DisplayState.STARTED
+            "STOPPING" -> DisplayState.STOPPING
+            "CLOSED" -> DisplayState.CLOSED
+            else -> DisplayState.STOPPED
+        }
+    }
+
+    override suspend fun sendContent(block: DisplayScope.() -> Unit): SpectraResult<Unit> =
+        sendContent(displayContent(block))
+
+    override suspend fun sendContent(content: DisplayContent): SpectraResult<Unit> =
+        meta.sendContent { renderRoot(content) }.fold(
+            onSuccess = { Result.success(Unit) },
+            onFailure = { error, cause -> spectraFailure(SpectraError.Backend(error.description, cause)) },
+        )
+
+    override suspend fun close() = meta.close()
+
+    // The root receiver is ContentScope; the children render inside a FlexBoxScope.
+    private fun ContentScope.renderRoot(content: DisplayContent) {
+        val root = content.root as DisplayNode.FlexBox
+        flexBox(
+            direction = metaDir(root.direction),
+            gap = root.gap,
+            alignment = metaAlign(root.alignment),
+            crossAlignment = metaAlign(root.crossAlignment),
+            wrap = root.wrap,
+            paddingTop = root.paddingTop,
+            paddingBottom = root.paddingBottom,
+            paddingStart = root.paddingStart,
+            paddingEnd = root.paddingEnd,
+            onClick = handler(root.handlerId, content.handlers),
+        ) {
+            root.children.forEach { child -> node(child, content.handlers) }
+        }
+    }
+
+    private fun FlexBoxScope.node(node: DisplayNode, handlers: Map<String, () -> Unit>) {
+        when (node) {
+            is DisplayNode.FlexBox -> flexBox(
+                direction = metaDir(node.direction),
+                gap = node.gap,
+                alignment = metaAlign(node.alignment),
+                crossAlignment = metaAlign(node.crossAlignment),
+                wrap = node.wrap,
+                paddingTop = node.paddingTop,
+                paddingBottom = node.paddingBottom,
+                paddingStart = node.paddingStart,
+                paddingEnd = node.paddingEnd,
+                onClick = handler(node.handlerId, handlers),
+            ) { node.children.forEach { node(it, handlers) } }
+
+            is DisplayNode.Text -> text(node.value, style = metaTextStyle(node.style), color = metaTextColor(node.color))
+            is DisplayNode.Image -> image(uri = node.uri, sizePreset = metaImageSize(node.sizePreset), cornerRadius = metaCorner(node.cornerRadius))
+            is DisplayNode.Button -> button(
+                label = node.label,
+                style = metaButtonStyle(node.style),
+                iconName = node.iconName?.let(::metaIcon),
+                onClick = handler(node.handlerId, handlers) ?: {},
+            )
+            is DisplayNode.Icon -> icon(name = metaIcon(node.name), style = metaIconStyle(node.style))
+            is DisplayNode.Video -> video(player = MetaVideoPlayer(source = MetaVideoSource.Url(node.uri), codec = MetaVideoCodec.MP4))
+        }
+    }
+
+    private fun handler(id: String?, handlers: Map<String, () -> Unit>): (() -> Unit)? = id?.let { handlers[it] }
+
+    private fun metaDir(d: Direction) = when (d) {
+        Direction.ROW -> MetaDirection.ROW
+        Direction.COLUMN -> MetaDirection.COLUMN
+        Direction.ROW_REVERSE -> MetaDirection.ROW_REVERSE
+        Direction.COLUMN_REVERSE -> MetaDirection.COLUMN_REVERSE
+    }
+    private fun metaAlign(a: Alignment) = when (a) {
+        Alignment.START -> MetaAlignment.START
+        Alignment.CENTER -> MetaAlignment.CENTER
+        Alignment.END -> MetaAlignment.END
+        Alignment.STRETCH -> MetaAlignment.STRETCH
+    }
+    private fun metaTextStyle(s: TextStyle) = when (s) {
+        TextStyle.HEADING -> MetaTextStyle.HEADING
+        TextStyle.BODY -> MetaTextStyle.BODY
+        TextStyle.META -> MetaTextStyle.META
+    }
+    private fun metaTextColor(c: TextColor) = when (c) {
+        TextColor.PRIMARY -> MetaTextColor.PRIMARY
+        TextColor.SECONDARY -> MetaTextColor.SECONDARY
+    }
+    private fun metaImageSize(s: ImageSize) = when (s) {
+        ImageSize.ICON -> MetaImageSize.ICON
+        ImageSize.FILL -> MetaImageSize.FILL
+    }
+    private fun metaCorner(c: CornerRadius) = when (c) {
+        CornerRadius.NONE -> MetaCornerRadius.NONE
+        CornerRadius.SMALL -> MetaCornerRadius.SMALL
+        CornerRadius.MEDIUM -> MetaCornerRadius.MEDIUM
+    }
+    private fun metaButtonStyle(b: ButtonStyle) = when (b) {
+        ButtonStyle.PRIMARY -> MetaButtonStyle.PRIMARY
+        ButtonStyle.SECONDARY -> MetaButtonStyle.SECONDARY
+        ButtonStyle.OUTLINE -> MetaButtonStyle.OUTLINE
+    }
+    private fun metaIconStyle(s: IconStyle) = when (s) {
+        IconStyle.FILLED -> MetaIconStyle.FILLED
+        IconStyle.OUTLINE -> MetaIconStyle.OUTLINE
+    }
+    private fun metaIcon(name: IconName) = when (name) {
+        IconName.ARROW_LEFT -> MetaIconName.ARROW_LEFT
+        IconName.ARROW_RIGHT -> MetaIconName.ARROW_RIGHT
+        IconName.CHECKMARK_CIRCLE -> MetaIconName.CHECKMARK_CIRCLE
+        IconName.BELL -> MetaIconName.BELL
+        IconName.GEAR -> MetaIconName.GEAR
+        IconName.HEART -> MetaIconName.HEART
+        IconName.CAMERA -> MetaIconName.VIDEO_CAMERA
+        IconName.PLAY -> MetaIconName.TRIANGLE_RIGHT
+        IconName.PAUSE -> MetaIconName.TWO_LINES_PARALLEL
+        IconName.CLOSE -> MetaIconName.X
+    }
+}

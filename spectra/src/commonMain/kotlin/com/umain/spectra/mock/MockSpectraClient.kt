@@ -54,7 +54,7 @@ internal class MockSpectraClient(
     }
 
     override suspend fun startRegistration(): SpectraResult<Unit> {
-        notInitialized()?.let { return it }
+        if (!initialized) return spectraFailure(SpectraError.NotInitialized)
         _registrationState.value = RegistrationState.Registering
         delay(config.registrationDelayMillis)
         if (config.failRegistration) {
@@ -68,7 +68,7 @@ internal class MockSpectraClient(
     }
 
     override suspend fun startUnregistration(): SpectraResult<Unit> {
-        notInitialized()?.let { return it }
+        if (!initialized) return spectraFailure(SpectraError.NotInitialized)
         _registrationState.value = RegistrationState.NotRegistered
         cameraStatus = PermissionStatus.NOT_DETERMINED
         _devices.value = emptyList()
@@ -97,7 +97,7 @@ internal class MockSpectraClient(
     }
 
     override suspend fun createSession(selector: DeviceSelector): SpectraResult<DeviceSession> {
-        notInitialized()?.let { return it }
+        if (!initialized) return spectraFailure(SpectraError.NotInitialized)
         if (_registrationState.value != RegistrationState.Registered) {
             return spectraFailure(SpectraError.NotRegistered)
         }
@@ -144,7 +144,4 @@ internal class MockSpectraClient(
             emptyList()
         }
     }
-
-    private fun <T> notInitialized(): SpectraResult<T>? =
-        if (initialized) null else spectraFailure(SpectraError.NotInitialized)
 }
