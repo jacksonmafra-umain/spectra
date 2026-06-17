@@ -1,0 +1,45 @@
+# Spectra
+
+> Spectra is a Kotlin Multiplatform wrapper around Meta's Wearables Device Access Toolkit (DAT). It exposes one coroutine-and-Flow API in commonMain for app registration, permissions, device sessions, camera streaming, photo capture, and the Ray-Ban Display, with an Android backend that delegates to the real mwdat-* artifacts, a documented iOS Swift-bridge skeleton, and a fully in-memory mock client for tests and previews. Library version 0.1.0. Targets Android (minSdk 29) and iOS (15.2+).
+
+## Core call sequence (do this in order)
+
+1. `spectra.initialize()` — once per process, before anything else.
+2. `spectra.startRegistration()` — one-time link to the Meta AI app.
+3. `spectra.requestPermission(Permission.CAMERA)` — required before any device appears.
+4. Read `spectra.devices` (a Flow) until it is non-empty.
+5. `spectra.createSession(DeviceSelector.Auto)`, then `session.start()`, then wait for `SessionState.RUNNING`.
+6. `session.openCameraStream(StreamConfiguration(...))` and/or `session.attachDisplay()`.
+
+## Key facts and gotchas
+
+- A device does NOT appear in `devices` until the user is registered AND has granted at least one permission. Empty list after registration usually means the permission step was skipped.
+- Session state is device-driven and asynchronous. Observe it; never assume the cause of a transition. `PAUSED` means hold and wait — do not restart.
+- Camera resolution and frame rate are requests, not guarantees; Bluetooth runs an automatic quality ladder (drops resolution first, then frame rate, never below 15fps). Valid frame rates: 2, 7, 15, 24, 30.
+- You cannot reconfigure a stream within a session. Stop the session and start a new one.
+- Display: every `sendContent` replaces the whole screen; no partial updates; the glasses retain no state. Always keep a root (L0) view because the back gesture from root ends the session.
+- Microphone uses platform HFP, not the Meta AI permission flow.
+- Use `Spectra.mock()` for tests/previews — no token, no hardware. `MockConfig(autoGrantPermissions = false)` and `MockConfig(failRegistration = true)` exercise failure paths.
+
+## Spectra documentation
+
+- [Spectra Docs (human site)](https://example.vercel.app/): Install, quickstart, concepts, platform notes, references.
+- [AGENTS.md](https://example.vercel.app/AGENTS.md): Agent-oriented rules, the call sequence, and anti-patterns to avoid.
+- [README](https://github.com/): Project overview, module layout, build instructions.
+
+## Upstream Meta references (the SDK Spectra wraps)
+
+- [Device Access Toolkit overview](https://wearables.developer.meta.com/docs/develop/dat/)
+- [Getting started / setup](https://wearables.developer.meta.com/docs/develop/dat/getting-started-toolkit)
+- [Integration overview](https://wearables.developer.meta.com/docs/develop/dat/build-overview)
+- [Android integration](https://wearables.developer.meta.com/docs/develop/dat/build-integration-android)
+- [iOS integration](https://wearables.developer.meta.com/docs/develop/dat/build-integration-ios)
+- [Session lifecycle](https://wearables.developer.meta.com/docs/develop/dat/lifecycle-events)
+- [Permissions and registration](https://wearables.developer.meta.com/docs/develop/dat/permissions-requests)
+- [Display overview](https://wearables.developer.meta.com/docs/develop/dat/display-overview)
+- [Display — Android](https://wearables.developer.meta.com/docs/develop/dat/display-android)
+- [Display — iOS](https://wearables.developer.meta.com/docs/develop/dat/display-ios)
+- [Display icons](https://wearables.developer.meta.com/docs/develop/dat/display-icons)
+- [AI-assisted development](https://wearables.developer.meta.com/docs/develop/dat/ai-assisted)
+- [Known issues](https://wearables.developer.meta.com/docs/develop/dat/knownissues)
+- [Full Meta DAT API reference for LLMs](https://wearables.developer.meta.com/llms.txt?full=true)
