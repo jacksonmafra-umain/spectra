@@ -16,6 +16,10 @@ dependencies {
 
     implementation(libs.androidx.activity.compose)
 
+    // MainActivity drives the Activity-bound registration/permission flow, so it
+    // needs the real SDK directly (Wearables + RequestPermissionContract).
+    implementation(libs.mwdat.core)
+
     implementation(libs.compose.uiToolingPreview)
     debugImplementation(libs.compose.uiTooling)
 }

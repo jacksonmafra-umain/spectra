@@ -37,6 +37,11 @@ kotlin {
     sourceSets {
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
+            // Real Meta SDK — the Android backend delegates to these. Resolves
+            // only with a GitHub Packages token (see settings.gradle.kts).
+            implementation(libs.mwdat.core)
+            implementation(libs.mwdat.camera)
+            implementation(libs.mwdat.display)
         }
         commonMain.dependencies {
             implementation(libs.kotlinx.coroutines.core)

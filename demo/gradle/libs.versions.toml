@@ -14,6 +14,7 @@ junit = "4.13.2"
 kotlin = "2.4.0"
 kotlinx-coroutines = "1.10.2"
 material3 = "1.11.0-alpha07"
+mwdat = "0.7.0"
 
 [libraries]
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
@@ -34,6 +35,9 @@ compose-material3 = { module = "org.jetbrains.compose.material3:material3", vers
 compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "composeMultiplatform" }
 compose-components-resources = { module = "org.jetbrains.compose.components:components-resources", version.ref = "composeMultiplatform" }
 compose-uiToolingPreview = { module = "org.jetbrains.compose.ui:ui-tooling-preview", version.ref = "composeMultiplatform" }
+mwdat-core = { module = "com.meta.wearable:mwdat-core", version.ref = "mwdat" }
+mwdat-camera = { module = "com.meta.wearable:mwdat-camera", version.ref = "mwdat" }
+mwdat-display = { module = "com.meta.wearable:mwdat-display", version.ref = "mwdat" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

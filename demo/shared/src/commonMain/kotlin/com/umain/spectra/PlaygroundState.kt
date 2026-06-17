@@ -38,9 +38,11 @@ import kotlinx.coroutines.launch
  * can just read it. No glasses, no tokens, no Bluetooth seance — it runs on a
  * phone or a simulator that has never seen a face.
  */
-class PlaygroundState(private val scope: CoroutineScope) {
+class PlaygroundState(
+    private val scope: CoroutineScope,
+    private val client: SpectraClient = Spectra.mock(),
+) {
 
-    private val client: SpectraClient = Spectra.mock()
     private var session: DeviceSession? = null
     private var stream: CameraStream? = null
     private var display: Display? = null

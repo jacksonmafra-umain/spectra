@@ -4,5 +4,52 @@
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+
+	<!-- Meta Wearables Device Access Toolkit credentials (project 1001077092842422). -->
+	<key>MWDAT</key>
+	<dict>
+		<key>AppLinkURLScheme</key>
+		<string>spectrademo://</string>
+		<key>MetaAppID</key>
+		<string>1001077092842422</string>
+		<key>ClientToken</key>
+		<string>AR|1001077092842422|6ca268dcc8a07be3ff0f56363f121eb5</string>
+		<!-- Your Apple Developer Team ID — set DEVELOPMENT_TEAM in Xcode / Config.xcconfig. -->
+		<key>TeamID</key>
+		<string>$(DEVELOPMENT_TEAM)</string>
+		<key>DAMEnabled</key>
+		<true/>
+	</dict>
+
+	<!-- Custom URL scheme so the Meta AI app can call back during registration.
+	     For production, register a Universal Link with Apple and use that instead. -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>spectrademo</string>
+			</array>
+		</dict>
+	</array>
+
+	<!-- External Accessory protocol for Meta Wearables + background modes. -->
+	<key>UISupportedExternalAccessoryProtocols</key>
+	<array>
+		<string>com.meta.ar.wearable</string>
+	</array>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>bluetooth-peripheral</string>
+		<string>external-accessory</string>
+	</array>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>Needed to connect to your Meta glasses.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Used to stream from your glasses' camera.</string>
 </dict>
 </plist>

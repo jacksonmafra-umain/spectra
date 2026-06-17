@@ -36,9 +36,9 @@ import androidx.compose.ui.unit.dp
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun App() {
+fun App(client: SpectraClient = Spectra.mock()) {
     val scope = rememberCoroutineScope()
-    val state = remember { PlaygroundState(scope) }
+    val state = remember { PlaygroundState(scope, client) }
 
     MaterialTheme(colorScheme = darkColorScheme()) {
         Box(modifier = Modifier.fillMaxSize().safeContentPadding().padding(16.dp)) {
