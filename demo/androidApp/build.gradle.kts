@@ -1,4 +1,17 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Properties
+
+// Read secrets from local.properties (gitignored) first, then a Gradle property,
+// then an env var — so nothing sensitive lives in tracked files.
+val localProps = Properties().apply {
+    val f = rootProject.file("local.properties")
+    if (f.exists()) f.inputStream().use { load(it) }
+}
+fun secret(key: String): String =
+    localProps.getProperty(key)
+        ?: providers.gradleProperty(key).orNull
+        ?: System.getenv(key.uppercase())
+        ?: ""
 
 plugins {
     alias(libs.plugins.androidApplication)
@@ -34,6 +47,10 @@ android {
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
         versionName = "1.0"
+
+        // Injected into AndroidManifest.xml; real values live in local.properties.
+        manifestPlaceholders["mwdat_application_id"] = secret("mwdat_application_id")
+        manifestPlaceholders["mwdat_client_token"] = secret("mwdat_client_token")
     }
     packaging {
         resources {

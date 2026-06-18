@@ -22,11 +22,11 @@
 		<key>AppLinkURLScheme</key>
 		<string>spectrademo://spectra</string>
 		<key>ClientToken</key>
-		<string>AR|1001077092842422|6ca268dcc8a07be3ff0f56363f121eb5</string>
+		<string>$(CLIENT_TOKEN)</string>
 		<key>DAMEnabled</key>
 		<true/>
 		<key>MetaAppID</key>
-		<string>1001077092842422</string>
+		<string>$(META_APP_ID)</string>
 		<key>TeamID</key>
 		<string>$(DEVELOPMENT_TEAM)</string>
 	</dict>

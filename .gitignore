@@ -45,3 +45,6 @@ meta-wearables-dat-ios-main/
 
 # Local credential backup — never commit
 .credentials-backup/
+
+# iOS signing/Meta secrets — never commit
+demo/iosApp/Configuration/Secrets.xcconfig

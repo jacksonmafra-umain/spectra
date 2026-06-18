@@ -2,7 +2,7 @@
   "applinks": {
     "details": [
       {
-        "appIDs": ["GPXQ9QN33Q.com.umain.spectrademo"],
+        "appIDs": ["TEAMID.com.umain.spectrademo"],
         "components": [
           { "/": "/spectra" },
           { "/": "/spectra/*" }

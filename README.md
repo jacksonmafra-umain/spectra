@@ -61,6 +61,29 @@ kotlin { sourceSets { commonMain.dependencies { implementation("com.umain.spectr
 
 Then `Spectra.mock()` works anywhere; `Spectra.create(context, bridge)` gives the real Android client (needs the GitHub token + the manifest credentials).
 
+## Local setup (secrets)
+
+No credentials are committed. The real values live in gitignored files you create once:
+
+**Android** — add to `demo/local.properties` (gitignored):
+
+```properties
+mwdat_application_id=YOUR_META_APP_ID
+mwdat_client_token=YOUR_META_CLIENT_TOKEN
+github_token=ghp_xxx            # only for the real mwdat-* artifacts (read:packages)
+```
+
+These get injected into `AndroidManifest.xml` via `manifestPlaceholders`. The mock backend needs none of them.
+
+**iOS** — copy the example and fill it in (gitignored):
+
+```bash
+cp demo/iosApp/Configuration/Secrets.xcconfig.example demo/iosApp/Configuration/Secrets.xcconfig
+# set TEAM_ID, META_APP_ID, CLIENT_TOKEN
+```
+
+`Info.plist` and the signing settings read these via `$(META_APP_ID)`, `$(CLIENT_TOKEN)`, `$(TEAM_ID)`.
+
 ## Run the demo
 
 Requires JDK 17+, Android SDK, and (for iOS) Xcode. Use the Gradle wrapper inside `demo/`.
