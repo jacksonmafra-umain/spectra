@@ -10,6 +10,11 @@ Spectra is a Kotlin Multiplatform wrapper around [Meta's Wearables Device Access
 
 > Independent wrapper. Not affiliated with, sponsored by, or endorsed by Meta. The toolkit is a developer preview, so the API will move.
 
+<p align="center">
+  <video src="docs/demo.mp4" controls playsinline width="640"></video>
+</p>
+<p align="center"><em>Demo (with sound). If it doesn't play inline on GitHub, <a href="docs/demo.mp4">open the video here</a>.</em></p>
+
 ## What's in here
 
 ```

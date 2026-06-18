@@ -42,3 +42,6 @@ node_modules/
 
 # Downloaded Meta sample, kept locally for reference only
 meta-wearables-dat-ios-main/
+
+# Local credential backup — never commit
+.credentials-backup/
