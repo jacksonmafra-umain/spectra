@@ -21,7 +21,7 @@ let package = Package(
         .binaryTarget(
             name: "Spectra",
             url: "https://github.com/jacksonmafra-umain/spectra/releases/download/0.2.0/Spectra.xcframework.zip",
-            checksum: "REPLACE_WITH_CHECKSUM_FROM_STEP_2"
+            checksum: "fd4ccd5b931a7f50b78f788f1f7e935bb0b0912b987cf555abb17418a6e8ca70"
         )
     ]
 )
