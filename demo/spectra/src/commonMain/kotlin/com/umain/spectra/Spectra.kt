@@ -22,8 +22,12 @@ import com.umain.spectra.mock.MockSpectraClient
  */
 public object Spectra {
 
-    /** The Spectra version, for logs, bug reports, and bragging in changelogs. */
-    public const val VERSION: String = "0.1.0"
+    /**
+     * The Spectra version, for logs, bug reports, and bragging in changelogs.
+     * Kept in sync with `gradle/libs.versions.toml` (and the published
+     * coordinates) by the release script — don't edit by hand.
+     */
+    public const val VERSION: String = "0.2.0"
 
     /**
      * A fully in-memory [SpectraClient] that simulates a pair of glasses.

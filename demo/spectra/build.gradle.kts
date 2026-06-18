@@ -10,8 +10,9 @@ plugins {
 }
 
 // Coordinates of the published artifact: com.umain.spectra:spectra:<version>.
+// Version lives in gradle/libs.versions.toml (spectra = "...") — bumped by publish.sh.
 group = "com.umain.spectra"
-version = "0.2.0"
+version = libs.versions.spectra.get()
 
 kotlin {
     // Bundles both iOS slices (device + simulator) into a single Spectra.xcframework.

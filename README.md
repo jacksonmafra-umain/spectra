@@ -32,18 +32,24 @@ The library (`:spectra`) is standalone: it has no dependency on the demo, so any
 
 ## Use Spectra in your own project
 
-Publish the library to Maven Local, then depend on it from any KMP project — no demo required:
+Current release: **`com.umain.spectra:spectra:0.2.0`** — published to GitHub Packages (Maven, for Android/KMP) and as a Swift Package (SPM, for iOS).
 
-```bash
-cd demo && ./gradlew :spectra:publishToMavenLocal   # -> com.umain.spectra:spectra:0.2.0
-```
+### Android / KMP — GitHub Packages (Maven)
+
+GitHub Packages requires a token even for reading public packages. Create a [PAT](https://github.com/settings/tokens) with `read:packages` and add it to the consuming project (e.g. `gradle.properties`/env as `github_token`).
 
 ```kotlin
-// settings.gradle.kts of your project — add mavenLocal() and the mwdat repo
+// settings.gradle.kts of your project
 dependencyResolutionManagement {
     repositories {
-        mavenLocal()
         google(); mavenCentral()
+        // Spectra itself
+        maven {
+            url = uri("https://maven.pkg.github.com/jacksonmafra-umain/spectra")
+            credentials { username = "<your-github-user>"; password = providers.gradleProperty("github_token").orNull ?: System.getenv("GH_TOKEN") ?: "" }
+            content { includeGroup("com.umain.spectra") }
+        }
+        // Spectra pulls the Meta SDK transitively (Android only) — add its repo too
         maven {
             url = uri("https://maven.pkg.github.com/facebook/meta-wearables-dat-android")
             credentials { username = ""; password = providers.gradleProperty("github_token").orNull ?: System.getenv("GH_TOKEN") ?: "" }
@@ -54,10 +60,30 @@ dependencyResolutionManagement {
 
 // shared/build.gradle.kts of your project
 kotlin { sourceSets { commonMain.dependencies { implementation("com.umain.spectra:spectra:0.2.0") } } }
-// SpectraClient now also exposes `hasActiveDevice: Flow<Boolean>`, an optional
+// SpectraClient also exposes `hasActiveDevice: Flow<Boolean>`, an optional
 // `mockDeviceKit: MockDeviceKit?` for hardware-free testing, and an optional
 // `audio: SpectraAudio?` (A2DP playback + HFP mic — plain Bluetooth, not DAT).
 ```
+
+### iOS — Swift Package Manager
+
+The release ships a prebuilt `Spectra.xcframework` as a binary Swift package. In Xcode: **File → Add Package Dependencies…** → `https://github.com/jacksonmafra-umain/spectra` → version **`0.2.0`**. No token needed (public release asset).
+
+```swift
+// Package.swift consumer
+.package(url: "https://github.com/jacksonmafra-umain/spectra", from: "0.2.0")
+// then: import Spectra
+```
+
+### Maven Local (offline / iterating)
+
+To try a build without publishing remotely:
+
+```bash
+cd demo && ./gradlew :spectra:publishToMavenLocal   # -> ~/.m2, com.umain.spectra:spectra:0.2.0
+```
+
+Add `mavenLocal()` to your repositories and depend on the same coordinates.
 
 Then `Spectra.mock()` works anywhere; `Spectra.create(context, bridge)` gives the real Android client (needs the GitHub token + the manifest credentials).
 

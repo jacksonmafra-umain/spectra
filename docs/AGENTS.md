@@ -62,7 +62,8 @@ result.onFailure { t ->
 
 ## Platform notes
 
-- **Android:** real backend needs a GitHub Packages token (`github_token` in `local.properties` or `GH_TOKEN` env). Registration + camera permission go through an `ActivityBridge` you implement against an Activity. Build/test with `./gradlew :spectra:allTests` (no token); publish locally with `./gradlew :spectra:publishToMavenLocal` (coordinates `com.umain.spectra:spectra:0.1.0`).
+- **Android:** real backend needs a GitHub Packages token (`github_token` in `local.properties` or `GH_TOKEN` env). Registration + camera permission go through an `ActivityBridge` you implement against an Activity. Build/test with `./gradlew :spectra:allTests` (no token). Consume the published artifact `com.umain.spectra:spectra:0.2.0` from GitHub Packages (`https://maven.pkg.github.com/jacksonmafra-umain/spectra`, needs a `read:packages` token), or `./gradlew :spectra:publishToMavenLocal` for offline use.
+- **iOS (SPM):** the release ships a prebuilt `Spectra.xcframework` as a Swift Package — `.package(url: "https://github.com/jacksonmafra-umain/spectra", from: "0.2.0")`, then `import Spectra`. No token needed (public release asset).
 - **iOS:** finish the Swift `@objc` shim and wire it via `cinterop`; until then use the mock. The `IosSpectraClient` error messages name each Swift symbol you still need to expose.
 
 ## Upstream truth

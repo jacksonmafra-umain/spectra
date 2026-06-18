@@ -153,12 +153,25 @@
 
     <section id="install">
       <h2>Install</h2>
-      <p>Spectra targets Android (minSdk 29) and iOS (15.2+), matching the Meta AI app's floor. Add the library to your shared module's <code>commonMain</code>:</p>
-      <pre><code class="language-kotlin">// settings.gradle.kts — Meta ships the real SDK through GitHub Packages,
-// so the Android target needs a token with read:packages.
+      <p>Spectra targets Android (minSdk 29) and iOS (15.2+), matching the Meta AI app's floor. Current release: <code>com.umain.spectra:spectra:0.2.0</code>, published to GitHub Packages (Maven) and as a Swift Package.</p>
+
+      <h3>Android / KMP — GitHub Packages (Maven)</h3>
+      <p>GitHub Packages requires a token even to read public packages — create a PAT with <code>read:packages</code>. Spectra also pulls Meta's SDK transitively on Android, so add that repository too.</p>
+      <pre><code class="language-kotlin">// settings.gradle.kts
 dependencyResolutionManagement {
     repositories {
         google(); mavenCentral()
+        // Spectra
+        maven {
+            url = uri("https://maven.pkg.github.com/jacksonmafra-umain/spectra")
+            credentials {
+                username = "&lt;your-github-user&gt;"
+                password = providers.gradleProperty("github_token").orNull
+                    ?: System.getenv("GH_TOKEN") ?: ""
+            }
+            content { includeGroup("com.umain.spectra") }
+        }
+        // Meta SDK (transitive, Android only)
         maven {
             url = uri("https://maven.pkg.github.com/facebook/meta-wearables-dat-android")
             credentials {
@@ -166,6 +179,7 @@ dependencyResolutionManagement {
                 password = providers.gradleProperty("github_token").orNull
                     ?: System.getenv("GH_TOKEN") ?: ""
             }
+            content { includeGroup("com.meta.wearable") }
         }
     }
 }</code></pre>
@@ -177,6 +191,13 @@ kotlin {
         }
     }
 }</code></pre>
+
+      <h3>iOS — Swift Package Manager</h3>
+      <p>The release ships a prebuilt <code>Spectra.xcframework</code> as a binary Swift package. In Xcode: <b>File → Add Package Dependencies…</b> → the repo URL → version <code>0.2.0</code>. No token needed (public release asset).</p>
+      <pre><code class="language-swift">// Package.swift
+.package(url: "https://github.com/jacksonmafra-umain/spectra", from: "0.2.0")
+// then: import Spectra</code></pre>
+
       <div class="note">The <b>mock</b> client needs no token and no repository. You only need the GitHub token to compile the real Android backend. Build your UI first; wire the token later.</div>
     </section>
 
