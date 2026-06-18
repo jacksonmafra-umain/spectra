@@ -87,9 +87,9 @@
 <div class="wrap">
   <section class="hero">
     <img src="logo.png" alt="Spectra" style="height:96px;width:auto;margin-bottom:22px;display:block" />
-    <span class="pill">Kotlin Multiplatform · developer preview · v0.2.0</span>
+    <span class="pill">Kotlin Multiplatform · developer preview · v0.2.1</span>
     <h1>Meta's glasses SDK,<br/><span class="grad">minus the boilerplate</span> and most of the suffering.</h1>
-    <p class="lede">Spectra is a Kotlin Multiplatform wrapper around Meta's Wearables Device Access Toolkit. Registration, permissions, camera streaming, photo capture and the Ray-Ban Display — one coroutine-and-<code>Flow</code> API in <code>commonMain</code>, the platform plumbing hidden where it belongs.</p>
+    <p class="lede">Spectra is a Kotlin Multiplatform wrapper around Meta's Wearables Device Access Toolkit. Registration, permissions, camera streaming, photo capture and the Ray-Ban Display, one coroutine-and-<code>Flow</code> API in <code>commonMain</code>, the platform plumbing hidden where it belongs.</p>
     <div class="cta">
       <a class="btn primary" href="#quickstart">Get started</a>
       <a class="btn ghost" href="#agents">Wire up your AI agent</a>
@@ -148,12 +148,12 @@
         <tr><td><code>Result&lt;T&gt;</code> with a typed <code>SpectraError</code></td><td>Errors that politely decline to explain themselves</td></tr>
         <tr><td><code>Spectra.mock()</code></td><td>No glasses, no token, no Bluetooth seance, full test coverage</td></tr>
       </table>
-      <div class="note"><b>Status:</b> the toolkit is a developer preview and so is Spectra (v0.2.0). The API will move. Pin your version and read the changelog before you upgrade. <b>New in 0.2.0:</b> <code>hasActiveDevice</code> on <code>SpectraClient</code>, and a developer-only <code>MockDeviceKit</code> for running the full pipeline with no hardware.</div>
+      <div class="note"><b>Status:</b> the toolkit is a developer preview and so is Spectra (v0.2.1). The API will move. Pin your version and read the changelog before you upgrade. <b>New in 0.2.1:</b> <code>hasActiveDevice</code> on <code>SpectraClient</code>, and a developer-only <code>MockDeviceKit</code> for running the full pipeline with no hardware.</div>
     </section>
 
     <section id="install">
       <h2>Install</h2>
-      <p>Spectra targets Android (minSdk 29) and iOS (15.2+), matching the Meta AI app's floor. Current release: <code>com.umain.spectra:spectra:0.2.0</code>, published to GitHub Packages (Maven) and as a Swift Package.</p>
+      <p>Spectra targets Android (minSdk 29) and iOS (15.2+), matching the Meta AI app's floor. Current release: <code>com.umain.spectra:spectra:0.2.1</code>, published to GitHub Packages (Maven) and as a Swift Package.</p>
 
       <h3>Android / KMP — GitHub Packages (Maven)</h3>
       <p>GitHub Packages requires a token even to read public packages — create a PAT with <code>read:packages</code>. Spectra also pulls Meta's SDK transitively on Android, so add that repository too.</p>
@@ -187,15 +187,15 @@ dependencyResolutionManagement {
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation("com.umain.spectra:spectra:0.2.0")
+            implementation("com.umain.spectra:spectra:0.2.1")
         }
     }
 }</code></pre>
 
       <h3>iOS — Swift Package Manager</h3>
-      <p>The release ships a prebuilt <code>Spectra.xcframework</code> as a binary Swift package. In Xcode: <b>File → Add Package Dependencies…</b> → the repo URL → version <code>0.2.0</code>. No token needed (public release asset).</p>
+      <p>The release ships a prebuilt <code>Spectra.xcframework</code> as a binary Swift package. In Xcode: <b>File → Add Package Dependencies…</b> → the repo URL → version <code>0.2.1</code>. No token needed (public release asset).</p>
       <pre><code class="language-swift">// Package.swift
-.package(url: "https://github.com/jacksonmafra-umain/spectra", from: "0.2.0")
+.package(url: "https://github.com/jacksonmafra-umain/spectra", from: "0.2.1")
 // then: import Spectra</code></pre>
 
       <div class="note">The <b>mock</b> client needs no token and no repository. You only need the GitHub token to compile the real Android backend. Build your UI first; wire the token later.</div>
@@ -217,7 +217,7 @@ kotlin {
       <div class="note">The <b>real Android backend</b> resolves the <code>mwdat-*</code> artifacts from GitHub Packages, which needs a token with <code>read:packages</code>. Put <code>github_token=ghp_...</code> in <code>local.properties</code> (gitignored) or export it — <code>settings.gradle.kts</code> reads the <code>GH_TOKEN</code> environment variable. The mock and <code>:spectra:allTests</code> build without it.</div>
 
       <h3>Publish to Maven Local</h3>
-      <p>Consume Spectra from another project on your machine, no remote repository required. This publishes the multiplatform metadata plus the Android and iOS variants to <code>~/.m2/repository</code> under <code>com.umain.spectra:spectra:0.2.0</code>.</p>
+      <p>Consume Spectra from another project on your machine, no remote repository required. This publishes the multiplatform metadata plus the Android and iOS variants to <code>~/.m2/repository</code> under <code>com.umain.spectra:spectra:0.2.1</code>.</p>
       <pre><code class="language-bash">./gradlew :spectra:publishToMavenLocal
 ls ~/.m2/repository/com/umain/spectra      # verify it landed</code></pre>
       <p>Then point the consuming project at Maven Local and depend on it:</p>
@@ -234,7 +234,7 @@ dependencyResolutionManagement {
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation("com.umain.spectra:spectra:0.2.0")
+            implementation("com.umain.spectra:spectra:0.2.1")
         }
     }
 }</code></pre>
@@ -280,7 +280,7 @@ suspend fun run() {
 
     <section id="demo">
       <h2>Run the demo (Android &amp; iOS)</h2>
-      <p>The Spectra Playground is one shared Compose Multiplatform screen — the same code on both platforms — restyled after Meta's own CameraAccess sample. It walks the exact flow your app would, and it runs with or without real glasses.</p>
+      <p>The Spectra Playground is one shared Compose Multiplatform screen, the same code on both platforms. It walks the exact flow your app would, and it runs with or without real glasses.</p>
       <ol>
         <li><b>Build it.</b> Android: <code>cd demo &amp;&amp; ./gradlew :androidApp:installDebug</code>. iOS: open <code>demo/iosApp/Spectra.xcodeproj</code> and Run (simulator for the mock, a real device for actual glasses).</li>
         <li><b>Connect.</b> The white welcome screen has a single blue <b>Connect my glasses</b> button — it kicks off registration (deeplinking to the Meta AI app on a real device).</li>
@@ -323,7 +323,8 @@ val session = spectra.createSession(DeviceSelector.Auto).getOrThrow()</code></pr
 
     <section id="lifecycle">
       <h2>Session lifecycle</h2>
-      <p>The single most important rule: the <em>device</em> drives session state and tells you asynchronously. You react. You never assume the cause — the SDK deliberately won't tell you <em>why</em> a session paused, only that it did.</p>
+      <p>The single most important rule: the <em>device</em> drives session state and tells you asynchronously. You react.<br/>
+          You never assume the cause — the SDK deliberately won't tell you <em>why</em> a session paused, only that it did.</p>
       <table>
         <tr><th>State</th><th>Meaning</th><th>What you do</th></tr>
         <tr><td><code>STOPPED</code></td><td>Inactive, not reconnecting</td><td>Free resources, wait for the user</td></tr>
@@ -343,7 +344,9 @@ val session = spectra.createSession(DeviceSelector.Auto).getOrThrow()</code></pr
 
     <section id="permissions">
       <h2>Registration & permissions</h2>
-      <p>Registration is the one-time handshake that links your app to the user's glasses through the Meta AI app. Camera permission is then granted per app, checked across <em>all</em> of the user's linked glasses — if any pair has said yes, you're granted. Spectra hides that bookkeeping.</p>
+      <p>Registration is the one-time handshake that links your app to the user's glasses through the Meta AI app. <br/>
+          Camera permission is then granted per app, checked across <em>all</em> of the user's linked glasses — if any pair has said yes, you're granted.<br/>
+          Spectra hides that bookkeeping.</p>
       <pre><code class="language-kotlin">spectra.registrationState.collect { state ->
     when (state) {
         RegistrationState.Registered   -> enableFeatures()
@@ -357,7 +360,8 @@ when (spectra.checkPermission(Permission.CAMERA)) {
     PermissionStatus.GRANTED -> startStreaming()
     else -> spectra.requestPermission(Permission.CAMERA)
 }</code></pre>
-      <div class="note">Microphone input on real hardware goes through the platform's Hands-Free Profile (HFP) over Bluetooth, not the Meta AI permission flow — so you still request the mic with the normal OS dialog. See <a href="#audio">Audio</a> for the full story and <code>SpectraClient.audio</code>.</div>
+      <div class="note">Microphone input on real hardware goes through the platform's Hands-Free Profile (HFP) over Bluetooth, not the Meta AI permission flow — so you still request the mic with the normal OS dialog. <br/>
+          See <a href="#audio">Audio</a> for the full story and <code>SpectraClient.audio</code>.</div>
     </section>
 
     <section id="camera">
@@ -373,12 +377,16 @@ stream.frames.onEach { frame ->
 
 stream.start()
 val photo: Photo = stream.capturePhoto().getOrThrow()  // a still, mid-stream</code></pre>
-      <div class="note"><b>Bluetooth has the final say.</b> Resolution and frame rate are requests. The link runs an automatic quality ladder — drop resolution first, then frame rate, never below 15fps. Counter-intuitively, asking for <em>less</em> can look <em>better</em>, because the per-frame compressor has less to throw away. You also can't reconfigure a stream within a session: stop it and start a new one.</div>
+      <div class="note"><b>Bluetooth has the final say.</b> Resolution and frame rate are requests. The link runs an automatic quality ladder — drop resolution first, then frame rate, never below 15fps.<br/>
+          Counter-intuitively, asking for <em>less</em> can look <em>better</em>, because the per-frame compressor has less to throw away. <br/>
+          You also can't reconfigure a stream within a session: stop it and start a new one.</div>
     </section>
 
     <section id="display">
       <h2>The display (Ray-Ban Display)</h2>
-      <p>Build screens with a declarative DSL that will feel like Compose or SwiftUI, because that's deliberate. Each <code>sendContent</code> replaces the entire display — there's no partial update, and the glasses retain no state. Your phone is the single source of truth.</p>
+      <p>Build screens with a declarative DSL that will feel like Compose or SwiftUI, because that's deliberate. <br/>
+          Each <code>sendContent</code> replaces the entire display — there's no partial update, and the glasses retain no state. <br/>
+          Your phone is the single source of truth.</p>
       <pre><code class="language-kotlin">val display = session.attachDisplay().getOrThrow()
 display.state.first { it == DisplayState.STARTED }
 
@@ -390,12 +398,14 @@ display.sendContent {
         button("Start", iconName = IconName.ARROW_RIGHT, onClick = ::showFirstStep)
     }
 }</code></pre>
-      <div class="note"><b>Always have a root view (L0).</b> The back gesture from the root ends the whole session, so always leave the user a way home. Keep layouts simple, images at or below 600&times;600, and videos short (MP4, https, 400px per side max).</div>
+      <div class="note"><b>Always have a root view (L0).</b> The back gesture from the root ends the whole session, so always leave the user a way home.<br/>
+          Keep layouts simple, images at or below 600&times;600, and videos short (MP4, https, 400px per side max).</div>
     </section>
 
     <section id="audio">
       <h2>Audio: microphones &amp; speakers</h2>
-      <p>Audio is <b>not</b> part of the Device Access Toolkit. On real hardware the Ray-Ban speakers and microphone are plain Bluetooth, shared with the system audio stack, so Spectra wraps the <em>platform</em> audio session — not the SDK — behind its own <code>SpectraClient.audio</code> capability (null where a backend can't route audio).</p>
+      <p>Audio is <b>not</b> part of the Device Access Toolkit. On real hardware the Ray-Ban speakers and microphone are plain Bluetooth, <br/>
+          shared with the system audio stack, so Spectra wraps the <em>platform</em> audio session — not the SDK — behind its own <code>SpectraClient.audio</code> capability (null where a backend can't route audio).</p>
       <table>
         <tr><th>Profile</th><th>Direction</th><th>Quality</th><th>Use</th></tr>
         <tr><td><b>A2DP</b></td><td>Output only</td><td>44.1/48 kHz stereo</td><td>Music, media, text-to-speech</td></tr>
@@ -408,12 +418,16 @@ audio.state.onEach { /* it.profile, it.micLevel, it.isPlaying, it.routedToGlasse
 audio.playToGlasses("Hello from your glasses")   // A2DP, high quality
 audio.startMicCapture()                           // HFP, emits a live level
 audio.stopMicCapture()</code></pre>
-      <div class="note"><b>Two gotchas baked into the API.</b> The profiles are mutually exclusive — turning the mic on (HFP) knocks playback down to 8 kHz mono. And if you ever capture the mic <em>while</em> a camera stream runs, the order matters: add the camera stream, start &amp; settle the HFP mic, <em>then</em> start the stream — or the audio route fails silently. The demo keeps audio on the pre-streaming screen to sidestep that. Under the hood it's <code>AVAudioSession</code>/<code>AVAudioEngine</code> on iOS and <code>AudioManager</code>/<code>AudioRecord</code> on Android; the mic needs the usual microphone permission.</div>
+      <div class="note"><b>Two gotchas baked into the API.</b> The profiles are mutually exclusive — turning the mic on (HFP) knocks playback down to 8 kHz mono. <br/>
+          And if you ever capture the mic <em>while</em> a camera stream runs, the order matters: add the camera stream, start &amp; settle the HFP mic, <em>then</em> start the stream — or the audio route fails silently. <br/>
+          The demo keeps audio on the pre-streaming screen to sidestep that. <br/>
+          Under the hood it's <code>AVAudioSession</code>/<code>AVAudioEngine</code> on iOS and <code>AudioManager</code>/<code>AudioRecord</code> on Android; the mic needs the usual microphone permission.</div>
     </section>
 
     <section id="android">
       <h2>Android</h2>
-      <p>Get the real client from <code>Spectra.create(context, bridge)</code>. Registration and the camera permission both deeplink to the Meta AI app and return via an <code>ActivityResult</code> contract that Android insists you register before the host is resumed — so those three calls live in an <code>ActivityBridge</code> you implement against a real Activity. Spectra handles everything else.</p>
+      <p>Get the real client from <code>Spectra.create(context, bridge)</code>. Registration and the camera permission both deeplink to the Meta AI app and return via an <code>ActivityResult</code> contract <br/>
+          that Android insists you register before the host is resumed — so those three calls live in an <code>ActivityBridge</code> you implement against a real Activity. Spectra handles everything else.</p>
       <pre><code class="language-kotlin">val spectra = Spectra.create(
     context = applicationContext,
     bridge = object : ActivityBridge {
@@ -428,18 +442,30 @@ audio.stopMicCapture()</code></pre>
 
     <section id="ios">
       <h2>iOS</h2>
-      <p>Get the client from <code>Spectra.create(bridge)</code>. Meta's iOS toolkit is a <em>Swift</em> package and Kotlin/Native speaks Objective-C interop, not Swift — so Spectra crosses the gap with a small protocol, <code>SpectraNativeBridge</code>, that Swift implements against <code>Wearables.shared</code>. The demo ships a complete implementation (<code>SpectraBridge.swift</code>): registration, the camera-permission flow, the active-device stream, camera streaming, photo capture, and MockDeviceKit. It's wired and works on real Ray-Ban Meta glasses today; <code>Spectra.mock()</code> still runs on the simulator and in SwiftUI previews.</p>
-      <div class="note"><b>Registration on iOS uses a custom URL scheme</b> — like Meta's own sample, and the simplest path. Set <code>MWDAT.AppLinkURLScheme</code> to <code>yourscheme://</code> and register that scheme in <code>CFBundleURLTypes</code>; the Meta AI app calls back there and your app forwards the URL to <code>Wearables.shared.handleUrl(...)</code> from <code>.onOpenURL</code> (filter on the <code>metaWearablesAction</code> query item). No Universal Link, no <code>apple-app-site-association</code>, no Associated Domains entitlement, and no paid Apple team required just to register. (A Universal Link is only worth the extra setup if you specifically need <code>https</code> links.)</div>
+      <p>Get the client from <code>Spectra.create(bridge)</code>. Meta's iOS toolkit is a <em>Swift</em> package and Kotlin/Native speaks Objective-C interop, not Swift<br/>
+          so Spectra crosses the gap with a small protocol, <code>SpectraNativeBridge</code>, that Swift implements against <code>Wearables.shared</code>.<br/>
+          The demo ships a complete implementation (<code>SpectraBridge.swift</code>): registration, the camera-permission flow, the active-device stream, camera streaming, photo capture, and MockDeviceKit. <br/>
+          It's wired and works on real Ray-Ban Meta glasses today; <code>Spectra.mock()</code> still runs on the simulator and in SwiftUI previews.</p>
+      <div class="note"><b>Registration on iOS uses a custom URL scheme</b> — like Meta's own sample, and the simplest path. <br/>
+          Set <code>MWDAT.AppLinkURLScheme</code> to <code>yourscheme://</code> and register that scheme in <code>CFBundleURLTypes</code>; the Meta AI app calls back there and your app forwards the URL<br/>
+          to <code>Wearables.shared.handleUrl(...)</code> from <code>.onOpenURL</code> (filter on the <code>metaWearablesAction</code> query item).<br/>
+          No Universal Link, no <code>apple-app-site-association</code>, no Associated Domains entitlement, and no paid Apple team required just to register. <br/>
+          (A Universal Link is only worth the extra setup if you specifically need <code>https</code> links.)</div>
     </section>
 
     <section id="golive">
       <h2>Go live: wiring it to Meta AI and the glasses</h2>
-      <p>Everything above runs on the mock. This is what it takes to point Spectra at actual hardware — which means dealing with Meta's Wearables Developer Center, a Managed Meta Account, and a permissions review. None of it is hard. All of it is bureaucratic. Budget an afternoon and a strong opinion about acronyms.</p>
+      <p>Everything above runs on the mock. This is what it takes to point Spectra at actual hardware — which means dealing with Meta's Wearables Developer Center, a Managed Meta Account, and a permissions review. <br/>
+          None of it is hard. All of it is bureaucratic. Budget an afternoon and a strong opinion about acronyms.</p>
 
-      <div class="note"><b>Set expectations first.</b> The toolkit is a developer preview. There is <em>no App Store / Play Store distribution yet</em> — everything is invite-only via release channels, and on iOS the <code>ExternalAccessory</code> dependency will get you rejected from the App Store if you try anyway. So "go live" here means "works for testers you invite", not "shipped to the public". Plan accordingly.</div>
+      <div class="note"><b>Set expectations first.</b> The toolkit is a developer preview. There is <em>no App Store / Play Store distribution yet</em> — everything is invite-only via release channels, <br/>
+          and on iOS the <code>ExternalAccessory</code> dependency will get you rejected from the App Store if you try anyway. So "go live" here means "works for testers you invite", not "shipped to the public". Plan accordingly.</div>
 
       <h3>Step 1 — One organization, one MMA, and the colleague who already made it</h3>
-      <p>Your company gets exactly <b>one</b> Managed Meta Account (MMA) organization in <a href="https://work.meta.com/admin/work_tools_overview">Admin Center</a>. Before you create one, ask IT / your lead whether it already exists, because creating a second one is the kind of mistake that generates a meeting. One admin (IT, lead, PM) signs up to the <a href="https://wearables.developer.meta.com/">Wearables Developer Center</a>, gets redirected to set up the MMA org at work.meta.com under the company's real name, and then invites everyone else. Only members of that MMA org can join your Developer Center team.</p>
+      <p>Your company gets exactly <b>one</b> Managed Meta Account (MMA) organization in <a href="https://work.meta.com/admin/work_tools_overview">Admin Center</a>.<br/>
+          Before you create one, ask IT / your lead whether it already exists, because creating a second one is the kind of mistake that generates a meeting. <br/>
+          One admin (IT, lead, PM) signs up to the <a href="https://wearables.developer.meta.com/">Wearables Developer Center</a>, gets redirected to set up the MMA <br/>
+          org at work.meta.com under the company's real name, and then invites everyone else. Only members of that MMA org can join your Developer Center team.</p>
       <p>Reference: <a href="https://wearables.developer.meta.com/docs/develop/dat/onboarding-and-organization-management/">Onboarding & organization management</a>.</p>
 
       <h3>Step 2 — Create the project and harvest your credentials</h3>
@@ -482,14 +508,20 @@ audio.stopMicCapture()</code></pre>
 &lt;/dict&gt;
 &lt;key&gt;UISupportedExternalAccessoryProtocols&lt;/key&gt;
 &lt;array&gt;&lt;string&gt;com.meta.ar.wearable&lt;/string&gt;&lt;/array&gt;</code></pre>
-      <div class="note">In <b>Developer Mode</b> attestation is skipped, so you can leave these as <code>0</code> / blank while prototyping. The catch: only <em>one</em> third-party app stays registered at a time in Developer Mode — registering a new one silently unregisters the last. And if you pre-process <code>Info.plist</code>, the <code>://</code> gets eaten unless you add the <code>-traditional-cpp</code> flag. Future-you says thanks.</div>
+      <div class="note">In <b>Developer Mode</b> attestation is skipped, so you can leave these as <code>0</code> / blank while prototyping. <br/>
+          The catch: only <em>one</em> third-party app stays registered at a time in Developer Mode — registering a new one silently unregisters the last. <br/>
+          And if you pre-process <code>Info.plist</code>, the <code>://</code> gets eaten unless you add the <code>-traditional-cpp</code> flag. Future-you says thanks.</div>
 
       <h3>Step 5 — Versions and release channels (a.k.a. how testers get in)</h3>
-      <p>Cut a version (<b>Distribute → Versions → Create new version</b>, pick Major/Minor/Patch like a responsible adult), then create a <b>release channel</b> and invite testers by email. Each channel holds one version at a time; channels are invite-only. The emails must be real <b>Meta Accounts</b> — note, <em>not</em> Managed Meta Accounts; the two sound identical and are not, which is exactly the sort of thing that eats a morning. Testers accept at <a href="https://wearables.meta.com/invites">wearables.meta.com/invites</a>.</p>
+      <p>Cut a version (<b>Distribute → Versions → Create new version</b>, pick Major/Minor/Patch like a responsible adult), then create a <b>release channel</b> and invite testers by email. <br/>
+          Each channel holds one version at a time; channels are invite-only. The emails must be real <b>Meta Accounts</b> — note, <em>not</em> Managed Meta Accounts; the two sound identical and are <br/>
+          not, which is exactly the sort of thing that eats a morning. Testers accept at <a href="https://wearables.meta.com/invites">wearables.meta.com/invites</a>.</p>
       <p>Reference: <a href="https://wearables.developer.meta.com/docs/develop/dat/set-up-release-channels/">Set up release channels</a>.</p>
 
       <h3>Step 6 — Prepare the actual glasses</h3>
-      <p>On the test device: Meta AI app <b>v254+</b>, glasses firmware <b>v20+</b> (Ray-Ban Meta) or <b>v21+</b> (Ray-Ban Display). Pair the glasses, then enable Developer Mode: <b>Settings → App Info → tap the app version five times</b>, toggle it on. For the <b>display</b> feature you also install DAT onto the glasses themselves: Meta AI <b>v272+</b>, firmware <b>v125+</b>, put the glasses on, then trigger the install from Dev Mode (keep the app open; it takes 5–10 seconds, and it'll refuse below 10% battery because of course it will).</p>
+      <p>On the test device: Meta AI app <b>v254+</b>, glasses firmware <b>v20+</b> (Ray-Ban Meta) or <b>v21+</b> (Ray-Ban Display). <br/>
+          Pair the glasses, then enable Developer Mode: <b>Settings → App Info → tap the app version five times</b>, toggle it on. <br/>
+          For the <b>display</b> feature you also install DAT onto the glasses themselves: Meta AI <b>v272+</b>, firmware <b>v125+</b>, put the glasses on, then trigger the install from Dev Mode (keep the app open; it takes 5–10 seconds, and it'll refuse below 10% battery because of course it will).</p>
       <p>Reference: <a href="https://wearables.developer.meta.com/docs/develop/dat/getting-started-toolkit/">Getting started / setup</a> and <a href="https://wearables.developer.meta.com/docs/develop/dat/display-overview/">Display overview</a>.</p>
 
       <h3>Step 7 — The tester's side, in the Meta AI app</h3>
@@ -554,7 +586,7 @@ audio.stopMicCapture()</code></pre>
 
 <footer>
   <div class="wrap">
-    <div>Spectra v0.2.0 · MIT · an independent wrapper, not affiliated with or endorsed by Meta.</div>
+    <div>Spectra v0.2.1 · MIT · an independent wrapper, not affiliated with or endorsed by Meta.</div>
     <div><a href="/llms.txt">llms.txt</a> · <a href="/AGENTS.md">AGENTS.md</a> · <a href="https://wearables.developer.meta.com/docs/develop/dat/">Meta DAT docs</a></div>
   </div>
 </footer>

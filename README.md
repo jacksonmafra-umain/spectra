@@ -32,7 +32,7 @@ The library (`:spectra`) is standalone: it has no dependency on the demo, so any
 
 ## Use Spectra in your own project
 
-Current release: **`com.umain.spectra:spectra:0.2.0`** — published to GitHub Packages (Maven, for Android/KMP) and as a Swift Package (SPM, for iOS).
+Current release: **`com.umain.spectra:spectra:0.2.1`** — published to GitHub Packages (Maven, for Android/KMP) and as a Swift Package (SPM, for iOS).
 
 ### Android / KMP — GitHub Packages (Maven)
 
@@ -59,7 +59,7 @@ dependencyResolutionManagement {
 }
 
 // shared/build.gradle.kts of your project
-kotlin { sourceSets { commonMain.dependencies { implementation("com.umain.spectra:spectra:0.2.0") } } }
+kotlin { sourceSets { commonMain.dependencies { implementation("com.umain.spectra:spectra:0.2.1") } } }
 // SpectraClient also exposes `hasActiveDevice: Flow<Boolean>`, an optional
 // `mockDeviceKit: MockDeviceKit?` for hardware-free testing, and an optional
 // `audio: SpectraAudio?` (A2DP playback + HFP mic — plain Bluetooth, not DAT).
@@ -67,11 +67,11 @@ kotlin { sourceSets { commonMain.dependencies { implementation("com.umain.spectr
 
 ### iOS — Swift Package Manager
 
-The release ships a prebuilt `Spectra.xcframework` as a binary Swift package. In Xcode: **File → Add Package Dependencies…** → `https://github.com/jacksonmafra-umain/spectra` → version **`0.2.0`**. No token needed (public release asset).
+The release ships a prebuilt `Spectra.xcframework` as a binary Swift package. In Xcode: **File → Add Package Dependencies…** → `https://github.com/jacksonmafra-umain/spectra` → version **`0.2.1`**. No token needed (public release asset).
 
 ```swift
 // Package.swift consumer
-.package(url: "https://github.com/jacksonmafra-umain/spectra", from: "0.2.0")
+.package(url: "https://github.com/jacksonmafra-umain/spectra", from: "0.2.1")
 // then: import Spectra
 ```
 
@@ -80,7 +80,7 @@ The release ships a prebuilt `Spectra.xcframework` as a binary Swift package. In
 To try a build without publishing remotely:
 
 ```bash
-cd demo && ./gradlew :spectra:publishToMavenLocal   # -> ~/.m2, com.umain.spectra:spectra:0.2.0
+cd demo && ./gradlew :spectra:publishToMavenLocal   # -> ~/.m2, com.umain.spectra:spectra:0.2.1
 ```
 
 Add `mavenLocal()` to your repositories and depend on the same coordinates.

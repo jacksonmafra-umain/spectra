@@ -17,7 +17,7 @@ material3 = "1.11.0-alpha07"
 mwdat = "0.7.0"
 # Single source of truth for the published Spectra library version. The publish
 # script (publish.sh) reads/bumps this line; spectra/build.gradle.kts consumes it.
-spectra = "0.2.0"
+spectra = "0.2.1"
 
 [libraries]
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }

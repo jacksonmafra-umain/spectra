@@ -27,7 +27,7 @@ public object Spectra {
      * Kept in sync with `gradle/libs.versions.toml` (and the published
      * coordinates) by the release script — don't edit by hand.
      */
-    public const val VERSION: String = "0.2.0"
+    public const val VERSION: String = "0.2.1"
 
     /**
      * A fully in-memory [SpectraClient] that simulates a pair of glasses.
